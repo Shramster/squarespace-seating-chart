@@ -1,0 +1,12 @@
+name: seatchart-ticketing
+
+services:
+  web:
+    build: .
+    command: sh /code/start.sh
+    env_file:
+      - .env
+    volumes:
+      - .:/code
+    ports:
+      - "${PORT:-8100}:8000"

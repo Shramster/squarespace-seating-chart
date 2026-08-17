@@ -1,4 +1,4 @@
-.PHONY: install dev build preview clean
+.PHONY: install dev build preview clean backend-up backend-down
 
 install:
 	npm install
@@ -14,3 +14,9 @@ preview:
 
 clean:
 	rm -rf dist node_modules
+
+backend-up:
+	cd backend && docker compose up -d --build
+
+backend-down:
+	cd backend && docker compose down
