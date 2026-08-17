@@ -8,6 +8,7 @@
   --border: rgba(17, 54, 134, 0.25);
   --seat-open: var(--bg);
   --seat-open-border: rgba(17, 54, 134, 0.35);
+  --venue-bg: #f1f8fd;
 
   box-sizing: border-box;
   max-width: 720px;
@@ -69,10 +70,25 @@
   margin-bottom: 16px;
 }
 
+.sc-venue-wrap {
+  margin-bottom: 20px;
+}
+
 .sc-venue {
   width: 100%;
   height: auto;
-  margin-bottom: 20px;
+  background: var(--venue-bg);
+}
+
+@media (max-width: 760px) {
+  .sc-venue-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sc-venue {
+    width: auto;
+    min-width: var(--venue-w, 1200px);
+  }
 }
 
 .sc-wall {

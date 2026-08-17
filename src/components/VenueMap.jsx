@@ -72,34 +72,36 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
 
 export default function VenueMap({ venue, soldSeats, selected, onSelectSeat }) {
   return (
-    <svg
-      className="sc-venue"
-      viewBox={`0 0 ${venue.width} ${venue.height}`}
-      role="img"
-      aria-label="Venue seat map"
-    >
-      <rect
-        className="sc-wall"
-        x={venue.walls.x}
-        y={venue.walls.y}
-        width={venue.walls.w}
-        height={venue.walls.h}
-        rx={venue.walls.rx}
-      />
-
-      {venue.furniture.map((piece, i) => (
-        <Furniture key={i} piece={piece} />
-      ))}
-
-      {venue.blocks.map((block) => (
-        <SeatBlock
-          key={block.id}
-          block={block}
-          soldSeats={soldSeats}
-          selected={selected}
-          onSelectSeat={onSelectSeat}
+    <div className="sc-venue-wrap" style={{ '--venue-w': `${venue.width}px` }}>
+      <svg
+        className="sc-venue"
+        viewBox={`0 0 ${venue.width} ${venue.height}`}
+        role="img"
+        aria-label="Venue seat map"
+      >
+        <rect
+          className="sc-wall"
+          x={venue.walls.x}
+          y={venue.walls.y}
+          width={venue.walls.w}
+          height={venue.walls.h}
+          rx={venue.walls.rx}
         />
-      ))}
-    </svg>
+
+        {venue.furniture.map((piece, i) => (
+          <Furniture key={i} piece={piece} />
+        ))}
+
+        {venue.blocks.map((block) => (
+          <SeatBlock
+            key={block.id}
+            block={block}
+            soldSeats={soldSeats}
+            selected={selected}
+            onSelectSeat={onSelectSeat}
+          />
+        ))}
+      </svg>
+    </div>
   )
 }
