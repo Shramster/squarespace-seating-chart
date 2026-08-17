@@ -16,7 +16,7 @@ clean:
 	rm -rf dist node_modules
 
 backend-up:
-	cd backend && docker compose up -d --build
+	cd backend && docker compose up
 
 backend-down:
 	cd backend && docker compose down
