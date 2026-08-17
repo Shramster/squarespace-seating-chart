@@ -11,7 +11,13 @@ const D = (label) => seat('delegate', { label })
 const _ = null // no seat here (gap / walkway / non-seat space)
 
 export const CONFIG = {
-  apiBase: 'http://127.0.0.1:8100', // your Django domain, no trailing slash
+  // Dev: match whatever host served this page, so it also works from a
+  // phone on the LAN (see `make dev-lan`). Prod build always uses the
+  // literal fallback below — set that to the real Django domain before
+  // going live.
+  apiBase: import.meta.env.DEV
+    ? `http://${window.location.hostname}:8100`
+    : 'http://127.0.0.1:8100', // your Django domain, no trailing slash
   defaultPrice: 25,
 
   // One entry per performance day. sku must match a Show.sku_prefix in

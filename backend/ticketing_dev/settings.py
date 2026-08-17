@@ -27,7 +27,9 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = config(
+    'DJANGO_ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv()
+)
 
 # Real deployments get this from Squarespace's webhook subscription
 # secret. No default — better to fail loudly than sign with a
