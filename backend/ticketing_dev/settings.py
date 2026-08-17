@@ -22,19 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-nmkfmtb&k#yl67$9-h)1!7b&h^*%%-@u%3u8q$ro)qpayzhg^b'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
-# Local-only dev value — real deployments get this from Squarespace's
-# webhook subscription secret, via .env, same as the rest of this project's
-# config (see swseng_backend's use of python-decouple).
-SQUARESPACE_WEBHOOK_SECRET = config(
-    'SQUARESPACE_WEBHOOK_SECRET', default='deadbeef' * 8
-)
+# Real deployments get this from Squarespace's webhook subscription
+# secret. No default — better to fail loudly than sign with a
+# predictable value.
+SQUARESPACE_WEBHOOK_SECRET = config('SQUARESPACE_WEBHOOK_SECRET')
 
 
 # Application definition
