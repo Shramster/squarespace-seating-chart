@@ -43,9 +43,11 @@ local venv — there isn't one set up for this repo.
   div is provided by the Squarespace page in production, and by
   `index.html` locally. If the element isn't found, mounting silently
   no-ops (logs an error) rather than throwing.
-- `src/config.js` is the single source of *display* data: API base URL, the
-  list of shows (`sku` + `buyLink` per performance day), and
-  `CONFIG.venue` — the real room modeled as discrete seating `blocks` (each
+- `src/config.js` is the single source of *display* data: API base URL,
+  `squarespaceBase` (the Squarespace site domain), the list of shows
+  (`sku` + `label` per performance day — each seat's buy link is computed,
+  not stored per show; see below), and `CONFIG.venue` — the real room
+  modeled as discrete seating `blocks` (each
   with position/rotation, since several blocks are rotated to follow the
   venue's angled walls) plus non-seat `furniture` (piano, stage/podium,
   wheelchair ramp). This file is the origin of the seat catalog — the
@@ -61,12 +63,19 @@ local venv — there isn't one set up for this repo.
   backend change needed to reserve a cast seat), `ga` (general admission,
   individually selectable), or `delegate` (assigned to a state, labeled
   with that state's code, e.g. `TX`). A seat's `code` is derived from its
-  block id + grid position (`buildSeatIndex` / `seatCode` in `config.js`),
-  *not* its type — so reassigning which physical seats are "Actor" seats
-  between runs is a one-line edit of that grid cell, with no effect on
-  identity or sold-seat tracking. `SEAT_INDEX` (a `Map<code, seat>` built
-  once at module load) is the lookup used by `App.jsx` to resolve the
-  selected seat's price/label.
+  block id + grid position (`buildSeatIndex` / `seatCode` in `config.js`,
+  format `<blockId><row+1>-<col+1>`, e.g. `L1-1`), *not* its type — so
+  reassigning which physical seats are "Actor" seats between runs is a
+  one-line edit of that grid cell, with no effect on identity or
+  sold-seat tracking. `buildSeatIndex` throws at module load if two cells
+  ever produce the same `code` (only possible with a poorly-chosen block
+  id). For non-delegate seats this `code` doubles as the buyer-facing
+  `label` (e.g. seat `L1-1` displays as "L1-1"); delegate seats keep a
+  separate `label` (their assigned state) while `code` stays
+  position-based underneath, so two delegates assigned the same state
+  never collide in identity. `SEAT_INDEX` (a `Map<code, seat>` built once
+  at module load) is the lookup used by `App.jsx` to resolve the selected
+  seat's price/label.
 - `src/hooks/useSeatStatus.js` fetches seat status from
   `{apiBase}/api/shows/{sku}/seats/` — `{soldSeats, heldSeats}` — and
   re-fetches whenever `sku` changes (e.g. switching day tabs in
@@ -87,14 +96,15 @@ local venv — there isn't one set up for this repo.
 - Selecting a seat doesn't purchase anything. Clicking "Reserve this
   seat" in `ReservePanel` calls `App.jsx`'s `handleReserve`, which
   `POST`s `{apiBase}/api/shows/{sku}/seats/{code}/hold/` to create a
-  short-lived hold (see backend section below), then opens that show's
-  Squarespace `buyLink` in a new tab. `ReservePanel` displays the exact
-  seat SKU (`{showSku}-{seatCode}`) so the buyer knows what to select at
-  checkout — there's no automated Squarespace cart integration (see
-  BACKLOG.md for the deferred same-origin cart-injection spike). A 409
-  from the hold endpoint (already sold/already held) surfaces as an
-  inline error and the buyer has to pick a different seat. Purchasing
-  itself is entirely out of this app's scope.
+  short-lived hold (see backend section below), then opens
+  `seatBuyLink(showSku, seatCode)` (`config.js`) in a new tab — a
+  permalink straight to that seat's own Squarespace product, computed from
+  `squarespaceBase` + `seatProductSlug()`. Every seat is its own
+  Squarespace product (not a variant of a per-show product), so there's no
+  dropdown for the buyer to hunt through; see `RUNBOOK.md` for the
+  catalog/CSV shape this depends on. A 409 from the hold endpoint (already
+  sold/already held) surfaces as an inline error and the buyer has to pick
+  a different seat. Purchasing itself is entirely out of this app's scope.
 - `vite.config.js` pins output filenames (`seat-chart.js` /
   `seat-chart.css`, no content hash, `cssCodeSplit: false`) so the
   Squarespace embed snippet never needs to change between deploys —
@@ -154,7 +164,7 @@ display.
 - **Catalog import — `backend/ticketing/management/commands/import_squarespace_csv.py`**:
   `manage.py import_squarespace_csv <csv_path>`. Reads a Squarespace
   product-import CSV's `SKU` column, expecting the format
-  `<show_sku>-<seat_code>` (e.g. `OCT03-L-0-0`) — rows without a `-` are
+  `<show_sku>-<seat_code>` (e.g. `OCT03-L1-1`) — rows without a `-` are
   skipped. Upserts one `Show` per distinct `show_sku` (label defaults to
   the sku string; rename in the admin for something friendlier) and a
   `SeatSkuMap` row per seat, keyed on `(show, seat_code)` so re-running
@@ -163,15 +173,22 @@ display.
 - **Test-data / catalog generator — `backend/test_data/generate_show_test_data.mjs`**
   (run with `node generate_show_test_data.mjs`): reads `SEAT_INDEX` from
   `src/config.js` and writes a full Squarespace product-import CSV
-  (`product_import-shows.csv`) — one product per show, one variant per
-  sellable seat (`ga`/`delegate` only; `actor` seats are excluded, never
-  sold). SKU is `<show.sku>-<seat.code>`, matching what
-  `import_squarespace_csv` expects. **`Stock` is hardcoded to `1` per
-  variant** — this is what makes Squarespace itself refuse a second sale
-  of an already-sold seat, independent of anything this app does. Price
-  is `$25` for `ga` / `$45` for `delegate` (`GA_PRICE`/`DELEGATE_PRICE`
-  constants). The Django import command reads this *same* CSV directly —
-  no separate JSON seed format, so the two systems can't drift apart.
+  (`product_import-shows.csv`) — **one product per sellable seat per show**
+  (`ga`/`delegate` only; `actor` seats are excluded, never sold), not a
+  variant, so every seat gets its own real Squarespace product page/
+  permalink (see `seatProductSlug()`/`seatBuyLink()` in `config.js`).
+  Each row's `Product URL` is `seatProductSlug(show.sku, seat.code)` and
+  `Categories` is the show's `label`, so Squarespace groups all of a day's
+  seats under one category page. SKU is `<show.sku>-<seat.code>`, matching
+  what `import_squarespace_csv` expects (it only reads the `SKU` column —
+  the per-seat-product vs. per-show-with-variants shape is invisible to
+  Django). **`Stock` is hardcoded to `1` per product** — this is what
+  makes Squarespace itself refuse a second sale of an already-sold seat,
+  independent of anything this app does. Price is `$25` for `ga` / `$45`
+  for `delegate` (`GA_PRICE`/`DELEGATE_PRICE` constants). The Django
+  import command reads this *same* CSV directly — no separate JSON seed
+  format, so the two systems can't drift apart. See `RUNBOOK.md` for the
+  full generate → import → test workflow.
 - **Settings** (`backend/ticketing_dev/settings.py`): `SECRET_KEY` and
   `SQUARESPACE_WEBHOOK_SECRET` are required env vars with no default (by
   design — fails loudly rather than signing with a predictable value).

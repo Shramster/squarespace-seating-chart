@@ -21,9 +21,9 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink, holdSta
         <span className="sc-panel-sku">SKU: {seatSku}</span>
         <br />
         {holdState === 'held' ? (
-          <>Reserved for the next few minutes — select SKU <strong>{seatSku}</strong> at checkout to finish.</>
+          <>Reserved for the next few minutes — finish checkout in the new tab.</>
         ) : (
-          <>Reserving opens checkout in a new tab. Select SKU <strong>{seatSku}</strong> there to finish.</>
+          <>Reserving opens checkout for this exact seat in a new tab.</>
         )}
       </div>
 

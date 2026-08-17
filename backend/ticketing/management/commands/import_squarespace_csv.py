@@ -10,7 +10,7 @@ class Command(BaseCommand):
         "Import seat-to-SKU mappings from a Squarespace product-import CSV "
         "(see backend/test_data/product_import-shows.csv). Each SKU is "
         "expected in the form '<show_sku>-<seat_code>' (e.g. "
-        "'OCT03-L-0-0'), matching how the seat-chart generator builds "
+        "'OCT03-L1-1'), matching how the seat-chart generator builds "
         "SKUs — rows whose SKU doesn't contain a '-' are skipped. Upserts "
         "one Show per distinct show_sku found (label defaults to the sku "
         "the first time it's created — rename it in the admin if you "

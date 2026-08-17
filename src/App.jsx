@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CONFIG, SEAT_INDEX } from './config.js'
+import { CONFIG, SEAT_INDEX, seatBuyLink } from './config.js'
 import { useSeatStatus } from './hooks/useSeatStatus.js'
 import DayTabs from './components/DayTabs.jsx'
 import VenueMap from './components/VenueMap.jsx'
@@ -40,7 +40,7 @@ export default function App() {
       }
       if (!res.ok) throw new Error(`bad response: ${res.status}`)
       setHoldState('held')
-      window.open(activeShow.buyLink, '_blank', 'noopener,noreferrer')
+      window.open(seatBuyLink(activeShow.sku, selected), '_blank', 'noopener,noreferrer')
     } catch {
       setHoldState('error')
       setHoldError("Couldn't reserve that seat — check your connection and try again.")
@@ -81,7 +81,7 @@ export default function App() {
         selected={selected}
         meta={selectedMeta}
         seatSku={seatSku}
-        buyLink={activeShow.buyLink}
+        buyLink={selected ? seatBuyLink(activeShow.sku, selected) : null}
         holdState={holdState}
         holdError={holdError}
         onReserve={handleReserve}

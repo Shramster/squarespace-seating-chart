@@ -1,10 +1,12 @@
 // One-off generator for test data: Fri/Sat shows Oct 3 - Nov 3 2026.
-// Produces a Squarespace product-import CSV (one product per show, one
-// variant per sellable seat). Import it into Django directly with
+// Produces a Squarespace product-import CSV (one product per seat per
+// show, grouped into a per-show-day Category — see seatProductSlug() in
+// src/config.js for why this is per-seat rather than per-show-with-
+// variants). Import it into Django directly with
 // `manage.py import_squarespace_csv test_data/product_import-shows.csv`.
 // Run with: node generate_show_test_data.mjs
 import { writeFileSync } from 'node:fs'
-import { SEAT_INDEX } from '../../src/config.js'
+import { SEAT_INDEX, seatProductSlug } from '../../src/config.js'
 
 const GA_PRICE = 25
 const DELEGATE_PRICE = 45
@@ -84,45 +86,40 @@ function csvField(value) {
 }
 
 for (const show of shows) {
-  const productUrl = `swing-night-${show.date.toISOString().slice(0, 10)}`
-
-  sellableSeats.forEach((seat, i) => {
+  sellableSeats.forEach((seat) => {
     const sku = `${show.sku}-${seat.code}`
     const price = seat.type === 'delegate' ? DELEGATE_PRICE : GA_PRICE
     const typeLabel = seat.type === 'delegate' ? 'Delegate' : 'General Admission'
 
-    const isFirstRow = i === 0
     csvRows.push(
       [
         '', // Product ID
         '', // Variant ID
-        isFirstRow ? 'PHYSICAL' : '',
+        'PHYSICAL',
         '', // Product Page
-        isFirstRow ? productUrl : '',
-        isFirstRow ? `Swing Night — ${show.label}` : '',
-        isFirstRow
-          ? `<p>Reserved seating for the ${show.label} performance. Select your seat below.</p>`
-          : '',
+        seatProductSlug(show.sku, seat.code),
+        `Swing Night — ${show.label} — Seat ${seat.label}`,
+        `<p>Reserved seating for the ${show.label} performance — Seat ${seat.label} (${typeLabel}).</p>`,
         sku,
         '', // GTIN
         '', // MPN
-        'Seat',
-        seat.label,
-        'Type',
-        typeLabel,
-        '', // Option 3 name
-        '', // Option 3 value
+        '', // Option Name 1
+        '', // Option Value 1
+        '', // Option Name 2
+        '', // Option Value 2
+        '', // Option Name 3
+        '', // Option Value 3
         price,
         '', // Sale Price
         'No',
         1,
-        isFirstRow ? 'Tickets' : '',
-        isFirstRow ? 'Swing Night' : '',
+        show.label,
+        'Swing Night',
         1,
         0,
         0,
         0,
-        isFirstRow ? 'Yes' : '',
+        'Yes',
         '' // Hosted Image URLs
       ]
         .map(csvField)
@@ -141,4 +138,4 @@ writeFileSync(
 // "<show_sku>-<seat_code>", so no separate seed file is needed.
 
 console.log(`${shows.length} shows: ${shows.map((s) => s.sku).join(', ')}`)
-console.log(`${sellableSeats.length} sellable seats/show -> ${csvRows.length - 1} variant rows total`)
+console.log(`${sellableSeats.length} sellable seats/show -> ${csvRows.length - 1} product rows total`)
