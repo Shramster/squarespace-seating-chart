@@ -9,6 +9,7 @@
   --seat-open: var(--bg);
   --seat-open-border: rgba(17, 54, 134, 0.35);
   --venue-bg: #f1f8fd;
+  --held: #d69e2e;
 
   box-sizing: border-box;
   max-width: 720px;
@@ -150,8 +151,15 @@
   cursor: not-allowed;
 }
 
+.sc-seat.sc-held circle {
+  fill: rgba(214, 158, 46, 0.15);
+  stroke: var(--held);
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
 .sc-seat.sc-actor circle {
-  fill: rgba(27, 27, 27, 0.04);
+  fill: rgba(27, 27, 27, 0.24);
   stroke: var(--ink-dim);
   stroke-dasharray: 2 2;
   cursor: not-allowed;
@@ -180,6 +188,7 @@
 }
 .sc-legend-swatch.gold { background: var(--blue); border-color: var(--blue-hover); }
 .sc-legend-swatch.sold { background: transparent; border-color: var(--ink-dim); }
+.sc-legend-swatch.held { background: rgba(214, 158, 46, 0.15); border-color: var(--held); }
 .sc-legend-swatch.delegate { background: rgba(17, 54, 134, 0.08); border-color: var(--navy); }
 .sc-legend-swatch.actor { background: rgba(27, 27, 27, 0.04); border-color: var(--ink-dim); border-style: dashed; }
 
@@ -200,6 +209,8 @@
 .sc-panel-text strong { color: var(--navy); font-size: 15px; }
 .sc-panel-character { color: var(--ink-dim); font-style: italic; }
 .sc-panel-empty { color: var(--ink-dim); font-size: 13px; }
+.sc-panel-sku { color: var(--ink-dim); font-size: 11px; letter-spacing: 0.03em; }
+.sc-panel-error { color: #b7231d; font-size: 12px; font-weight: 700; flex-basis: 100%; }
 .sc-reserve-btn {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px;
@@ -216,6 +227,7 @@
   display: inline-block;
 }
 .sc-reserve-btn:hover { background: var(--blue-hover); }
+.sc-reserve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 480px) {
   .sc-title { font-size: 21px; }

@@ -1,4 +1,4 @@
-export default function ReservePanel({ selected, meta, buyLink }) {
+export default function ReservePanel({ selected, meta, seatSku, buyLink, holdState, holdError, onReserve }) {
   if (!selected) {
     return (
       <div className="sc-panel">
@@ -18,11 +18,31 @@ export default function ReservePanel({ selected, meta, buyLink }) {
           </>
         )}
         <br />
-        Select <strong>{meta.label}</strong> at checkout on the next page.
+        <span className="sc-panel-sku">SKU: {seatSku}</span>
+        <br />
+        {holdState === 'held' ? (
+          <>Reserved for the next few minutes — select SKU <strong>{seatSku}</strong> at checkout to finish.</>
+        ) : (
+          <>Reserving opens checkout in a new tab. Select SKU <strong>{seatSku}</strong> there to finish.</>
+        )}
       </div>
-      <a className="sc-reserve-btn" href={buyLink} target="_blank" rel="noopener noreferrer">
-        Reserve this seat
-      </a>
+
+      {holdState === 'error' && <div className="sc-panel-error">{holdError}</div>}
+
+      {holdState === 'held' ? (
+        <a className="sc-reserve-btn" href={buyLink} target="_blank" rel="noopener noreferrer">
+          Reopen checkout
+        </a>
+      ) : (
+        <button
+          type="button"
+          className="sc-reserve-btn"
+          onClick={onReserve}
+          disabled={holdState === 'holding'}
+        >
+          {holdState === 'holding' ? 'Reserving…' : 'Reserve this seat'}
+        </button>
+      )}
     </div>
   )
 }
