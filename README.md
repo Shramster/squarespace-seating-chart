@@ -12,11 +12,21 @@ src/
     useSeatStatus.js     fetches sold seats from Django, per show
   components/
     DayTabs.jsx
-    Stage.jsx
-    SeatGrid.jsx
+    VenueMap.jsx          SVG render of config.js's venue.blocks/furniture
+    Furniture.jsx         piano / stage+podium / wheelchair pieces
     Legend.jsx
     ReservePanel.jsx
 ```
+
+The venue isn't a uniform grid — it's several distinct seating blocks (some
+rotated) laid out to match the real room, defined in `config.js` as
+`CONFIG.venue.blocks`. Each seat is one of three types: `actor` (cast, never
+for public sale), `ga` (general admission, individually selectable), or
+`delegate` (assigned to a state, labeled with that state's code, e.g. `TX`).
+A seat's identity (`code`) is derived from its block + grid position, not its
+type — so reassigning which physical seats are "Actor" seats is just editing
+that cell's helper (`A()`/`G()`/`D()`) in `config.js`, with no effect on
+sold-seat tracking.
 
 ## Develop
 
@@ -64,10 +74,10 @@ Django app.
 
 ## Before going live
 
-- Fill in real values in `src/config.js`: `apiBase`, each show's `sku`
-  and `buyLink`, and `seatMeta` for every priced/cast seat. Keep this in
-  sync with the `SeatDefinition` rows in Django — this file only drives
-  what's *displayed*, Django/Squarespace remain the source of truth for
-  what's actually charged.
+- Fill in real values in `src/config.js`: `apiBase`, each show's `sku` and
+  `buyLink`, and `CONFIG.venue` — block positions/rotation and every seat's
+  type/label — to match the real venue. Keep this in sync with the
+  `SeatDefinition` rows in Django — this file only drives what's *displayed*,
+  Django/Squarespace remain the source of truth for what's actually charged.
 - Squarespace only executes JS in a **Code Block** (Business/Commerce
   plan) — Markdown/Text blocks strip `<script>` tags.

@@ -10,15 +10,15 @@ export default function ReservePanel({ selected, meta, buyLink }) {
   return (
     <div className="sc-panel">
       <div className="sc-panel-text">
-        Seat <strong>{selected}</strong> · ${meta.price}
-        {meta.character && (
+        Seat <strong>{meta.label}</strong> · ${meta.price}
+        {meta.type === 'delegate' && (
           <>
             <br />
-            <span className="sc-panel-character">Playing: {meta.character}</span>
+            <span className="sc-panel-character">Delegation: {meta.label}</span>
           </>
         )}
         <br />
-        Select <strong>{selected}</strong> at checkout on the next page.
+        Select <strong>{meta.label}</strong> at checkout on the next page.
       </div>
       <a className="sc-reserve-btn" href={buyLink} target="_blank" rel="noopener noreferrer">
         Reserve this seat

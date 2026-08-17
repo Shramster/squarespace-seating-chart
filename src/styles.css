@@ -61,20 +61,6 @@
   font-weight: 700;
 }
 
-.sc-stage-wrap { display: flex; justify-content: center; margin-bottom: 30px; }
-.sc-stage {
-  width: 78%;
-  text-align: center;
-  padding: 10px 0;
-  border-bottom: 2px solid var(--marquee-gold);
-  border-radius: 50% / 8px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--marquee-gold);
-}
-
 .sc-status-note {
   text-align: center;
   font-family: system-ui, -apple-system, sans-serif;
@@ -83,64 +69,80 @@
   margin-bottom: 16px;
 }
 
-.sc-rows { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-.sc-row { display: flex; align-items: center; gap: 10px; }
-.sc-row-label {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  color: var(--chalk-dim);
-  width: 16px;
-  text-align: center;
-  flex-shrink: 0;
+.sc-venue {
+  width: 100%;
+  height: auto;
+  margin-bottom: 20px;
 }
-.sc-seats { display: flex; gap: 6px; }
-.sc-aisle { width: 18px; flex-shrink: 0; }
 
-.sc-seat {
-  position: relative;
-  width: 30px;
-  height: 26px;
-  border-radius: 6px 6px 3px 3px;
-  border: 1.5px solid var(--seat-open-border);
-  background: var(--seat-open);
-  color: var(--chalk-dim);
+.sc-wall {
+  fill: none;
+  stroke: var(--seat-open-border);
+  stroke-width: 2;
+}
+
+.sc-furniture rect {
+  fill: none;
+  stroke: var(--chalk-dim);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.sc-furniture text {
+  fill: var(--chalk-dim);
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 9px;
+  font-size: 13px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.sc-stage rect { stroke-dasharray: none; stroke: var(--marquee-gold); }
+.sc-stage .sc-podium { fill: var(--stage-black); }
+.sc-stage text { fill: var(--marquee-gold); letter-spacing: 0.15em; text-transform: uppercase; font-size: 11px; }
+.sc-wheelchair-icon { font-size: 22px; fill: var(--ga-border); }
+
+.sc-seat circle {
+  fill: var(--seat-open);
+  stroke: var(--seat-open-border);
+  stroke-width: 1.5;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  transition: stroke 0.12s ease, fill 0.12s ease;
 }
-.sc-seat::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: 50%;
-  width: 4px;
-  height: 4px;
-  background: var(--stage-black);
-  border-radius: 50%;
-  transform: translateX(-50%);
+.sc-seat text {
+  fill: var(--chalk-dim);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 8px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
 }
-.sc-seat.sc-ga { border-color: var(--ga-border); }
-.sc-seat:hover:not(.sc-sold) { border-color: var(--marquee-gold); transform: translateY(-1px); }
-.sc-seat.sc-selected {
-  background: var(--marquee-gold);
-  border-color: var(--marquee-gold-bright);
-  color: var(--stage-black);
-  font-weight: 700;
+
+.sc-seat.sc-delegate circle { stroke: var(--marquee-gold); fill: rgba(201, 162, 39, 0.16); }
+.sc-seat.sc-delegate text { fill: var(--marquee-gold-bright); font-weight: 700; }
+
+.sc-seat.sc-ga:hover circle,
+.sc-seat.sc-delegate:hover circle { stroke: var(--marquee-gold-bright); }
+
+.sc-seat.sc-selected circle {
+  fill: var(--marquee-gold);
+  stroke: var(--marquee-gold-bright);
 }
-.sc-seat.sc-sold {
-  background: transparent;
-  border-color: var(--velvet);
-  color: var(--velvet-bright);
-  cursor: not-allowed;
+.sc-seat.sc-selected text { fill: var(--stage-black); font-weight: 700; }
+
+.sc-seat.sc-sold circle {
+  fill: transparent;
+  stroke: var(--velvet);
   opacity: 0.55;
+  cursor: not-allowed;
 }
-.sc-seat:focus-visible { outline: 2px solid var(--marquee-gold-bright); outline-offset: 2px; }
-.sc-seat:disabled { pointer-events: none; }
+
+.sc-seat.sc-actor circle {
+  fill: var(--stage-black);
+  stroke: var(--chalk-dim);
+  stroke-dasharray: 2 2;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sc-seat:focus-visible circle { outline: 2px solid var(--marquee-gold-bright); outline-offset: 2px; }
 
 .sc-legend {
   display: flex;
@@ -162,7 +164,8 @@
 }
 .sc-legend-swatch.gold { background: var(--marquee-gold); border-color: var(--marquee-gold-bright); }
 .sc-legend-swatch.sold { background: transparent; border-color: var(--velvet); }
-.sc-legend-swatch.ga { border-color: var(--ga-border); }
+.sc-legend-swatch.delegate { background: rgba(201, 162, 39, 0.16); border-color: var(--marquee-gold); }
+.sc-legend-swatch.actor { background: var(--stage-black); border-color: var(--chalk-dim); border-style: dashed; }
 
 .sc-panel {
   margin-top: 28px;
@@ -199,8 +202,5 @@
 .sc-reserve-btn:hover { background: var(--marquee-gold-bright); }
 
 @media (max-width: 480px) {
-  .sc-seat { width: 24px; height: 22px; }
-  .sc-seats { gap: 4px; }
-  .sc-row { gap: 6px; }
   .sc-title { font-size: 21px; }
 }

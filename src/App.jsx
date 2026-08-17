@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { CONFIG } from './config.js'
+import { CONFIG, SEAT_INDEX } from './config.js'
 import { useSeatStatus } from './hooks/useSeatStatus.js'
 import DayTabs from './components/DayTabs.jsx'
-import Stage from './components/Stage.jsx'
-import SeatGrid from './components/SeatGrid.jsx'
+import VenueMap from './components/VenueMap.jsx'
 import Legend from './components/Legend.jsx'
 import ReservePanel from './components/ReservePanel.jsx'
 
@@ -17,7 +16,8 @@ export default function App() {
     setSelected(null)
   }
 
-  const selectedMeta = selected ? CONFIG.seatMeta[selected] || { price: CONFIG.defaultPrice } : null
+  const seat = selected ? SEAT_INDEX.get(selected) : null
+  const selectedMeta = seat ? { ...seat, price: seat.price ?? CONFIG.defaultPrice } : null
 
   return (
     <div className="seat-chart">
@@ -35,14 +35,8 @@ export default function App() {
         </p>
       )}
 
-      <Stage />
-
-      <SeatGrid
-        rowLabels={CONFIG.rowLabels}
-        seatsPerRow={CONFIG.seatsPerRow}
-        aisleAfterSeat={CONFIG.aisleAfterSeat}
-        seatMeta={CONFIG.seatMeta}
-        defaultPrice={CONFIG.defaultPrice}
+      <VenueMap
+        venue={CONFIG.venue}
         soldSeats={soldSeats}
         selected={selected}
         onSelectSeat={setSelected}

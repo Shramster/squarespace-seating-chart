@@ -1,3 +1,15 @@
+// Seat helpers — keep block grids readable as literals below.
+// A() = actor (cast, never for public sale)
+// G() = general admission (individually selectable, default price)
+// D(label) = delegate seat, assigned to the state given by `label`
+function seat(type, opts = {}) {
+  return { type, ...opts }
+}
+const A = () => seat('actor')
+const G = () => seat('ga')
+const D = (label) => seat('delegate', { label })
+const _ = null // no seat here (gap / walkway / non-seat space)
+
 export const CONFIG = {
   apiBase: 'https://yourdjangoapp.com', // your Django domain, no trailing slash
   defaultPrice: 25,
@@ -9,17 +21,162 @@ export const CONFIG = {
     { sku: 'SEPT13', label: 'Sun, Sept 13', buyLink: 'https://yoursite.squarespace.com/sept-13-tickets' }
   ],
 
-  // Shared across every show — same seating config each night.
-  rowLabels: ['A', 'B', 'C', 'D', 'E'],
-  seatsPerRow: 8,
-  aisleAfterSeat: 4,
+  // The real room: several distinct seating blocks (some rotated) plus
+  // furniture, transcribed from seatchart.png (per-seat type/label) and
+  // cross-referenced against seatchart.txt (room envelope, stage/podium,
+  // piano ). This is a best-effort transcription —
+  // verify against the physical venue before going live.
+  //
+  // Seat identity: every seat's `code` is derived from its block id + grid
+  // position (not its type/label), so reassigning a seat's role later
+  // (e.g. which physical seats are "Actor" seats) is just editing that
+  // cell's A()/G()/D() in place below — no effect on sold-seat tracking.
+  venue: {
+    width: 1200,
+    height: 900,
 
-  // Per-seat price / character / GA flag. Seats not listed here fall
-  // back to defaultPrice with no character. Keep this in sync with the
-  // SeatDefinition rows in Django — this copy only drives display.
-  seatMeta: {
-    D3: { price: 45, character: 'Ophelia' },
-    E5: { price: 20, ga: true },
-    E6: { price: 20, ga: true }
+    walls: { x: 10, y: 10, w: 1180, h: 880, rx: 12 },
+
+    furniture: [
+      { type: 'piano', x: 90, y: 60, w: 150, h: 90, label: 'Grand Piano' },
+      { type: 'stage', x: 620, y: 420, w: 200, h: 80, label: 'Stage', podium: { w: 70, h: 34 } },
+    ],
+
+    blocks: [
+      // Left block — tall, 4 seats across, 11 rows.
+      {
+        id: 'L',
+        x: 40, y: 220, rotation: 0,
+        cellSize: 28, gap: 6,
+        grid: [
+          [G, A(), A(), G],
+          [D('TX'), G, G, G],
+          [G, G, D('NM'), A()],
+          [D('CO'), G, G, D('HI')],
+          [G, G, G, G],
+          [D('PHIL'), G, G, A()],
+          [G, A(), A(), D('AZ')],
+          [G, A(), G, G],
+          [D('C.Z.'), G, G, G],
+          [G, D('RI'), G, D('AK')],
+          [A(), G, D('DE'), A()]
+        ]
+      },
+
+      // Top-center block — two pairs of columns split by a center aisle
+      // (col index 2 stays empty), plus two isolated seats on the far
+      // right (col index 5, only populated on rows 1-2).
+      {
+        id: 'T',
+        x: 330, y: 60, rotation: 0,
+        cellSize: 28, gap: 6,
+        grid: [
+          [G(), G(), _, G(), D('SD'), _],
+          [A(), D('MN'), _, G(), A(), A()],
+          [D('WI'), G(), _, D('MT'), G(), G()],
+          [A(), D('WA'), _, G(), D('MI'), _]
+        ]
+      },
+
+      // Center block, upper half — freestanding, below the top block.
+      {
+        id: 'M1',
+        x: 430, y: 260, rotation: 0,
+        cellSize: 28, gap: 6,
+        grid: [
+          [G(), G(), A(), A()],
+          [A(), G(), D('AL'), G()],
+          [D('WV'), D('DC'), G(), D('SC')],
+          [A(), A(), A(), A()]
+        ]
+      },
+
+      // Center block, lower half — separated from M1 by a walkway gap.
+      {
+        id: 'M2',
+        x: 430, y: 460, rotation: 0,
+        cellSize: 28, gap: 6,
+        grid: [
+          [D('MD'), A(), G(), _],
+          [A(), G(), G(), G()],
+          [G(), D('NJ'), D('VT'), A()],
+          [D('ME'), G(), A(), A()]
+        ]
+      },
+
+      // Bottom-center block — mirrors the top block's aisle/isolated-seat
+      // layout.
+      {
+        id: 'B',
+        x: 330, y: 650, rotation: 0,
+        cellSize: 28, gap: 6,
+        grid: [
+          [A(), A(), _, D('CT'), D('NH'), A()],
+          [G(), A(), _, A(), G(), A()],
+          [A(), G(), _, G(), G(), _],
+          [D('OR'), G(), G(), G(), A(), D('ID')]
+        ]
+      },
+
+      // Right-side blocks — rotated to follow the room's angled wall.
+      {
+        id: 'R1',
+        x: 780, y: 150, rotation: -30,
+        cellSize: 30, gap: 6,
+        grid: [
+          [A(), G()],
+          [A(), D('UT')],
+          [G(), G()],
+          [A(), G()]
+        ]
+      },
+      {
+        id: 'R2',
+        x: 840, y: 390, rotation: 0,
+        cellSize: 30, gap: 6,
+        grid: [
+          [A(), A()],
+          [G(), G()],
+          [D('NV'), G()],
+          [A(), A()]
+        ]
+      },
+      {
+        id: 'R3',
+        x: 780, y: 630, rotation: 30,
+        cellSize: 30, gap: 6,
+        grid: [
+          [A(), G()],
+          [G(), D('VIR IS.')],
+          [A(), G()],
+          [A(), G()]
+        ]
+      }
+    ]
   }
+}
+
+// Flat code -> seat lookup, built once from the static venue layout above.
+// code format: "<blockId>-<row>-<col>" (0-indexed), stable across reassignment.
+function buildSeatIndex(venue) {
+  const index = new Map()
+  for (const block of venue.blocks) {
+    block.grid.forEach((row, r) => {
+      row.forEach((cell, c) => {
+        if (!cell) return
+        // Delegate seats keep their state code as the label; every other
+        // seat gets a friendly block-scoped label (e.g. "L2-3") so buyers
+        // have something readable to reference at checkout.
+        const label = cell.label || `${block.id}${r + 1}-${c + 1}`
+        index.set(seatCode(block.id, r, c), { ...cell, label })
+      })
+    })
+  }
+  return index
+}
+
+export const SEAT_INDEX = buildSeatIndex(CONFIG.venue)
+
+export function seatCode(blockId, row, col) {
+  return `${blockId}-${row}-${col}`
 }

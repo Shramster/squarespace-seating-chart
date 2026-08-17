@@ -1,23 +1,27 @@
+x is a seat 
+- and | are walls of the room
+STAGE is a catwalk with a podium at the end
 
-
-          Grand     x x x x x
-          Piano     x x = x x x
-                    x x = x x x
-                    x x = x x
-
-  x x x x                                x x 
-  x x x x             x x x x             x x
-  x x x x             x x x x              x x
-  x x x x             x x x x               x x
-  x x x x             x x x x     _______    x x 
-  x = = x                          Podium    x x
-  x x x x             x x x x     _______    x x
-  x x x x             x x x x                x x
-  x x x x             x x x x               x x
-  x x x x             x x x x              x x
-  x x x x                                 x x 
-                                         x x 
-                    x x = x x
-                    x x = x x x
-                    x x = x x x
-                    x x x x x
+ ---------------------------------------------------------|
+ |           Grand     x x x x x                          |
+ |           Piano     x x = x x x                        |
+ |                     x x = x x x                        |
+ |                     x x = x x                          |
+ |                                         x x            |
+ |   x x x x                                x x           |
+ |   x x x x             x x x x             x x          |
+ |   x x x x             x x x x              x x         |
+ |   x x x x             x x x x                          |
+ |   x x x x             x x x x     _______    x x       |
+ |   x = = x                          STAGE     x x       |
+ |   x x x x             x x x x     _______    x x       |
+ |   x x x x             x x x x                x x       |
+ |   x x x x             x x x x                          |
+ |   x x x x             x x x x              x x         |
+ |   x x x x                                 x x          |
+ |                                          x x           |
+ |                     x x = x x x         x              |
+ |                     x x = x x x                        |
+ |                     x x = x x                          |
+ |                     x x x x x                          |
+ ---------------------------------------------------------|
