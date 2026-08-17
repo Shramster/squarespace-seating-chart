@@ -12,8 +12,26 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
     ? `rotate(${block.rotation} ${cx} ${cy})`
     : undefined
 
+  const pad = block.cellSize / 2 + 10
+  const boxX = block.x - pad
+  const boxY = block.y - pad
+  const boxWidth = width + pad * 2
+  const boxHeight = height + pad * 2
+
   return (
     <g transform={transform}>
+      <rect
+        className="sc-block-box"
+        x={boxX}
+        y={boxY}
+        width={boxWidth}
+        height={boxHeight}
+        rx={6}
+      />
+      <text className="sc-block-label" x={boxX + boxWidth} y={boxY - 6}>
+        {block.name || block.id}
+      </text>
+
       {block.grid.map((row, r) =>
         row.map((cell, c) => {
           if (!cell) return null

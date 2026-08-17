@@ -81,7 +81,7 @@ export const CONFIG = {
     blocks: [
       // Left block — tall, 4 seats across, 11 rows.
       {
-        id: 'L',
+        id: 'L', name: 'Left',
         x: 40, y: 220, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
@@ -103,7 +103,7 @@ export const CONFIG = {
       // (col index 2 stays empty), plus two isolated seats on the far
       // right (col index 5, only populated on rows 1-2).
       {
-        id: 'T',
+        id: 'T', name: 'Top Center',
         x: 330, y: 60, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
@@ -116,8 +116,8 @@ export const CONFIG = {
 
       // Center block, upper half — freestanding, below the top block.
       {
-        id: 'M1',
-        x: 430, y: 260, rotation: 0,
+        id: 'M1', name: 'Center Upper',
+        x: 430, y: 275, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
           [G(), G(), A(), A()],
@@ -129,8 +129,8 @@ export const CONFIG = {
 
       // Center block, lower half — separated from M1 by a walkway gap.
       {
-        id: 'M2',
-        x: 430, y: 460, rotation: 0,
+        id: 'M2', name: 'Center Lower',
+        x: 430, y: 490, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
           [D('MD'), A(), G(), _],
@@ -143,8 +143,8 @@ export const CONFIG = {
       // Bottom-center block — mirrors the top block's aisle/isolated-seat
       // layout.
       {
-        id: 'B',
-        x: 330, y: 650, rotation: 0,
+        id: 'B', name: 'Bottom Center',
+        x: 330, y: 705, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
           [A(), A(), _, D('CT'), D('NH'), A()],
@@ -156,7 +156,7 @@ export const CONFIG = {
 
       // Right-side blocks — rotated to follow the room's angled wall.
       {
-        id: 'R1',
+        id: 'R1', name: 'Right Front',
         x: 780, y: 150, rotation: -30,
         cellSize: 30, gap: 6,
         grid: [
@@ -167,7 +167,7 @@ export const CONFIG = {
         ]
       },
       {
-        id: 'R2',
+        id: 'R2', name: 'Right Center',
         x: 840, y: 390, rotation: 0,
         cellSize: 30, gap: 6,
         grid: [
@@ -178,7 +178,7 @@ export const CONFIG = {
         ]
       },
       {
-        id: 'R3',
+        id: 'R3', name: 'Right Back',
         x: 780, y: 630, rotation: 30,
         cellSize: 30, gap: 6,
         grid: [

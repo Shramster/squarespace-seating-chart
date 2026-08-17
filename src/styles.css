@@ -39,27 +39,49 @@
 
 .sc-tabs {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 26px;
-  flex-wrap: wrap;
 }
-.sc-tab {
+.sc-tab-arrow {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.05em;
+  font-size: 18px;
+  line-height: 1;
   background: transparent;
-  color: var(--ink-dim);
+  color: var(--navy);
   border: 1px solid var(--border);
-  padding: 7px 14px;
-  border-radius: 3px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   cursor: pointer;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.sc-tab.active {
+.sc-tab-arrow:hover:not(:disabled) {
   background: var(--blue);
   border-color: var(--blue);
   color: var(--bg);
+}
+.sc-tab-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.sc-tab-select {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
   font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--navy);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 7px 10px;
+  cursor: pointer;
+  text-align: center;
+  text-align-last: center;
+  min-width: 0;
+  flex: 0 1 260px;
 }
 
 .sc-status-note {
@@ -107,7 +129,7 @@
 .sc-furniture text {
   fill: var(--ink-dim);
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   text-anchor: middle;
   dominant-baseline: middle;
 }
@@ -115,6 +137,22 @@
 .sc-stage .sc-podium { fill: var(--bg); }
 .sc-stage text { fill: var(--navy); letter-spacing: 0.15em; text-transform: uppercase; font-size: 11px; }
 .sc-wheelchair-icon { font-size: 22px; fill: var(--blue-hover); }
+
+.sc-block-box {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1.25;
+  stroke-dasharray: 3 3;
+}
+.sc-block-label {
+  fill: var(--navy);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-anchor: end;
+}
 
 .sc-seat circle {
   fill: var(--seat-open);
@@ -126,7 +164,7 @@
 .sc-seat text {
   fill: var(--ink-dim);
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 8px;
+  font-size: 14px;
   text-anchor: middle;
   dominant-baseline: middle;
   pointer-events: none;
