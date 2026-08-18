@@ -195,13 +195,35 @@ docker network ls | grep swseng    # or whatever the swseng backend/ directory i
 ```
 Add that value to `backend/.env` as `SWSENG_NETWORK_NAME=<name from above>`.
 
-**7d. Get a cert for the new subdomain**, using the same webroot the
-swseng nginx container already serves `.well-known/acme-challenge/`
-from (`./certbot/www` in the swseng repo, bind-mounted to
-`/var/www/certbot` in its nginx container, backed by the VPS's own
-`/etc/letsencrypt`). Run certbot on the **host** (not in a container),
-matching however the existing `api.swseng.io`/`api-staging.swseng.io`
-certs were obtained — e.g.:
+**7d. Certbot needs nginx already routing the new hostname's HTTP-01
+challenge before it can issue a cert — but the HTTPS server block for
+`seatchart-demo.swseng.io` in `nginx.production.conf` references a cert
+that doesn't exist yet, and since it's one shared config file, a block
+referencing a missing cert would fail `nginx -t` for the *entire* file
+(not just that block). To break this chicken-and-egg problem, that
+HTTPS block is checked in **commented out**; only the plain-HTTP block
+(redirect + ACME challenge location, no cert reference) is active
+to start. Pull and reload with just that:
+```
+cd /path/to/new_swseng/backend
+git pull
+docker compose exec nginx nginx -t     # validate syntax first — should pass with the HTTPS block still commented
+docker compose exec nginx nginx -s reload
+```
+`nginx -t` failing here will NOT take down `api.swseng.io` — reload
+only applies on success. Confirm production is still healthy after
+reloading:
+```
+curl -sI https://api.swseng.io/api/shows/ | head -1
+```
+
+**7e. Get the cert**, now that nginx is serving the ACME challenge path
+for the new hostname, using the same webroot the swseng nginx container
+already serves `.well-known/acme-challenge/` from (`./certbot/www` in
+the swseng repo, bind-mounted to `/var/www/certbot` in its nginx
+container, backed by the VPS's own `/etc/letsencrypt`). Run certbot on
+the **host** (not in a container), matching however the existing
+`api.swseng.io`/`api-staging.swseng.io` certs were obtained — e.g.:
 ```
 sudo certbot certonly --webroot -w /path/to/new_swseng/backend/certbot/www -d seatchart-demo.swseng.io
 ```
@@ -210,34 +232,28 @@ the swseng nginx container already bind-mounts read-only (its compose
 production overlay mounts the host's whole `/etc/letsencrypt`), so no
 change to that mount is needed.
 
-**7e. Bring up the seatchart backend container** (must happen *before*
-7f's nginx reload — the nginx config's demo server block resolves
-`seatchart_web` at request time via Docker's embedded DNS, but the
-container still needs to exist and be joined to the network first):
+**7f. Bring up the seatchart backend container**, then uncomment the
+HTTPS block and reload nginx again (must happen in this order — the
+demo server block resolves `seatchart_web` at request time via Docker's
+embedded DNS, but the container needs to exist and be joined to the
+network first; and the cert from 7e needs to exist before the HTTPS
+block will load):
 ```
 cd ~/seatchart-demo/backend
 docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --build
-```
-Verify it's up and joined to the right network:
-```
 docker compose logs web --tail 30
 docker network inspect $SWSENG_NETWORK_NAME | grep -A2 seatchart
 ```
-
-**7f. Reload swseng's nginx** to pick up the new `seatchart-demo.swseng.io`
-server blocks (already added to
-`new_swseng/backend/nginx/nginx.production.conf` — review that diff,
-commit, `git pull` on the VPS, then):
+Uncomment the HTTPS `server { listen 443 ssl; server_name
+seatchart-demo.swseng.io; ... }` block in `nginx.production.conf`,
+commit, then on the VPS:
 ```
 cd /path/to/new_swseng/backend
-docker compose exec nginx nginx -t     # validate syntax first
+git pull
+docker compose exec nginx nginx -t
 docker compose exec nginx nginx -s reload
-```
-`nginx -t` failing here (e.g. because 7e wasn't done yet) will NOT take
-down `api.swseng.io` — reload only applies on success. Confirm
-production is still healthy after reloading:
-```
-curl -sI https://api.swseng.io/api/shows/ | head -1
+curl -sI https://api.swseng.io/api/shows/ | head -1     # confirm prod still healthy
+curl -sI https://seatchart-demo.swseng.io/                # should now respond instead of erroring
 ```
 
 **7g. Import the demo catalog and confirm:**
