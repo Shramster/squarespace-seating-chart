@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config(
     'DJANGO_ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv()
@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -139,6 +140,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Serves the seatchart frontend's built dist/seat-chart.js + .css via
+# whitenoise, at <apiBase>/static/seat-chart.{js,css} — reuses the same
+# nginx proxy_pass as the API endpoints, no separate static hosting
+# needed. /dist is bind-mounted in from the repo root's dist/ (see
+# docker-compose.yml); `npm run build` must be run before collectstatic
+# picks these up. Not using whitenoise's *Manifest* storage — that
+# content-hashes filenames, which breaks vite.config.js's pinned
+# (unhashed) seat-chart.js/.css output that the Squarespace embed
+# snippet depends on staying stable across deploys.
+STATICFILES_DIRS = ['/dist']
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

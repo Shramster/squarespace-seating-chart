@@ -1,0 +1,23 @@
+# Stakeholder-demo production overlay for the seatchart ticketing
+# backend. Runs alongside (not inside) the swseng repo's own compose
+# stack on the same VPS — joins its Docker network so swseng's nginx
+# container can reach this one by name, without publishing any host
+# port or touching swseng's own services.
+#
+# Usage: docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --build
+#
+# Before running: set SWSENG_NETWORK_NAME in backend/.env to the actual
+# network name swseng's compose stack created — find it with
+# `docker network ls` on the VPS (usually `<swseng-backend-dir>_default`).
+services:
+  web:
+    ports: []
+    networks:
+      swseng_net:
+        aliases:
+          - seatchart_web
+
+networks:
+  swseng_net:
+    external: true
+    name: ${SWSENG_NETWORK_NAME}

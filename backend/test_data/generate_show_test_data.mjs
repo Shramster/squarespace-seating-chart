@@ -1,4 +1,6 @@
-// One-off generator for test data: Fri/Sat shows Oct 3 - Nov 3 2026.
+// One-off generator for test data: a single stakeholder-demo show,
+// deliberately tiny/obviously-fake (nominal pricing, DO-NOT-BUY naming,
+// ~10 seats) so it's safe to import into a real Squarespace test site.
 // Produces a Squarespace product-import CSV (one product per seat per
 // show, grouped into a per-show-day Category — see seatProductSlug() in
 // src/config.js for why this is per-seat rather than per-show-with-
@@ -8,11 +10,15 @@
 import { writeFileSync } from 'node:fs'
 import { SEAT_INDEX, seatProductSlug } from '../../src/config.js'
 
-const GA_PRICE = 25
-const DELEGATE_PRICE = 45
+const GA_PRICE = 0
+const DELEGATE_PRICE = 0
 
+// Single demo date — must match the one CONFIG.shows entry left in
+// src/config.js for the demo.
 const START = new Date('2026-10-03T00:00:00')
-const END = new Date('2026-11-03T00:00:00')
+const END = new Date('2026-10-03T00:00:00')
+
+const DEMO_SEAT_COUNT = 10
 
 function fridaysAndSaturdays(start, end) {
   const dates = []
@@ -23,15 +29,12 @@ function fridaysAndSaturdays(start, end) {
   return dates
 }
 
-function showSku(date) {
-  const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase()
-  return `${month}${String(date.getDate()).padStart(2, '0')}`
+function showSku() {
+  return 'TEST01'
 }
 
-function showLabel(date) {
-  const weekday = date.toLocaleString('en-US', { weekday: 'short' })
-  const month = date.toLocaleString('en-US', { month: 'long' })
-  return `${weekday}, ${month} ${date.getDate()}, ${date.getFullYear()}`
+function showLabel() {
+  return 'STAKEHOLDER DEMO — DO NOT BUY'
 }
 
 const shows = fridaysAndSaturdays(START, END).map((date) => ({
@@ -41,10 +44,12 @@ const shows = fridaysAndSaturdays(START, END).map((date) => ({
 }))
 
 // Only ga/delegate seats are individually sellable — actor seats are
-// always reserved for cast and never get a product variant.
+// always reserved for cast and never get a product variant. Capped to a
+// small handful for the demo catalog.
 const sellableSeats = [...SEAT_INDEX.entries()]
   .filter(([, seat]) => seat.type === 'ga' || seat.type === 'delegate')
   .map(([code, seat]) => ({ code, ...seat }))
+  .slice(0, DEMO_SEAT_COUNT)
 
 const csvRows = []
 csvRows.push(

@@ -8,5 +8,6 @@ services:
       - .env
     volumes:
       - .:/code
+      - ../dist:/dist
     ports:
       - "${PORT:-8100}:8000"

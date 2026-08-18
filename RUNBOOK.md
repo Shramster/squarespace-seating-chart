@@ -152,3 +152,118 @@ There's currently no reconciliation path if a webhook delivery is missed
 (e.g. tunnel down, Squarespace retry exhausted) — a seat could show sold in
 Squarespace but not in Django, or vice versa. Worth a periodic manual
 diff against the Squarespace orders export until that gap is closed.
+
+## 7. Stakeholder demo deploy (VPS)
+
+One-time setup to put a deliberately tiny, obviously-fake catalog (10
+seats, $0, SKU `TEST01`, "STAKEHOLDER DEMO — DO NOT BUY") on a real
+HTTPS URL for a stakeholder walkthrough, without touching the swseng
+repo's own production app. The seatchart backend runs as its own
+container on the **same VPS** that already serves `api.swseng.io`
+(165.232.128.75), reachable at `seatchart-demo.swseng.io`, sharing that
+box's nginx container and Let's Encrypt setup but not its Django app,
+database, or ports. Frontend static files (`dist/seat-chart.js`/`.css`)
+are served by the seatchart Django app itself via whitenoise, through
+the same nginx proxy — no separate static host needed.
+
+This section assumes the swseng repo (`new_swseng/backend/`) is already
+deployed and running on this VPS via its own `docker compose`, per that
+repo's `DEPLOY.md`.
+
+**7a. DNS.** Add an A record: `seatchart-demo.swseng.io` → `165.232.128.75`.
+Wait for it to propagate before requesting a cert (7d).
+
+**7b. Get the code onto the VPS.**
+```
+git clone git@github.com:Shramster/squarespace-seating-chart.git ~/seatchart-demo
+cd ~/seatchart-demo
+npm install
+npm run build          # produces dist/seat-chart.js + .css, mounted into the backend container
+```
+
+**7c. Configure `backend/.env`** (not committed — create fresh on the VPS):
+```
+SECRET_KEY=<generate a fresh one, e.g. `python3 -c "import secrets; print(secrets.token_urlsafe(50))"`>
+SQUARESPACE_WEBHOOK_SECRET=<placeholder for now — replaced in 7g>
+DJANGO_ALLOWED_HOSTS=seatchart-demo.swseng.io
+CORS_ALLOWED_ORIGINS=https://flute-swan-yncx.squarespace.com
+DEBUG=False
+```
+Find the swseng compose stack's network name (needed next):
+```
+docker network ls | grep swseng    # or whatever the swseng backend/ directory is named on this box
+```
+Add that value to `backend/.env` as `SWSENG_NETWORK_NAME=<name from above>`.
+
+**7d. Get a cert for the new subdomain**, using the same webroot the
+swseng nginx container already serves `.well-known/acme-challenge/`
+from (`./certbot/www` in the swseng repo, bind-mounted to
+`/var/www/certbot` in its nginx container, backed by the VPS's own
+`/etc/letsencrypt`). Run certbot on the **host** (not in a container),
+matching however the existing `api.swseng.io`/`api-staging.swseng.io`
+certs were obtained — e.g.:
+```
+sudo certbot certonly --webroot -w /path/to/new_swseng/backend/certbot/www -d seatchart-demo.swseng.io
+```
+This writes to `/etc/letsencrypt/live/seatchart-demo.swseng.io/`, which
+the swseng nginx container already bind-mounts read-only (its compose
+production overlay mounts the host's whole `/etc/letsencrypt`), so no
+change to that mount is needed.
+
+**7e. Bring up the seatchart backend container** (must happen *before*
+7f's nginx reload — the nginx config's demo server block resolves
+`seatchart_web` at request time via Docker's embedded DNS, but the
+container still needs to exist and be joined to the network first):
+```
+cd ~/seatchart-demo/backend
+docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --build
+```
+Verify it's up and joined to the right network:
+```
+docker compose logs web --tail 30
+docker network inspect $SWSENG_NETWORK_NAME | grep -A2 seatchart
+```
+
+**7f. Reload swseng's nginx** to pick up the new `seatchart-demo.swseng.io`
+server blocks (already added to
+`new_swseng/backend/nginx/nginx.production.conf` — review that diff,
+commit, `git pull` on the VPS, then):
+```
+cd /path/to/new_swseng/backend
+docker compose exec nginx nginx -t     # validate syntax first
+docker compose exec nginx nginx -s reload
+```
+`nginx -t` failing here (e.g. because 7e wasn't done yet) will NOT take
+down `api.swseng.io` — reload only applies on success. Confirm
+production is still healthy after reloading:
+```
+curl -sI https://api.swseng.io/api/shows/ | head -1
+```
+
+**7g. Import the demo catalog and confirm:**
+```
+docker compose exec web python manage.py import_squarespace_csv test_data/product_import-shows.csv
+curl -s https://seatchart-demo.swseng.io/api/shows/TEST01/seats/
+curl -sI https://seatchart-demo.swseng.io/static/seat-chart.js | head -1
+```
+
+**7h. Squarespace side** (on `https://flute-swan-yncx.squarespace.com/`):
+create the demo page with a Code Block:
+```html
+<div id="seat-chart-root"></div>
+<link rel="stylesheet" href="https://seatchart-demo.swseng.io/static/seat-chart.css">
+<script src="https://seatchart-demo.swseng.io/static/seat-chart.js"></script>
+```
+Bulk-import `backend/test_data/product_import-shows.csv` per §4 above,
+then password-protect the page (Squarespace page settings → password).
+
+**7i. Register the webhook and test end-to-end** per §5–§6 above, using
+`https://seatchart-demo.swseng.io/api/webhooks/squarespace/orders/` as
+the registered URL. Update `SQUARESPACE_WEBHOOK_SECRET` in
+`~/seatchart-demo/backend/.env` with the real value Squarespace shows
+at registration, then `docker compose restart web`.
+
+**Tearing the demo down later:** `docker compose down` in
+`~/seatchart-demo/backend`, remove the two `seatchart-demo.swseng.io`
+server blocks (and this note) from `nginx.production.conf`, reload
+nginx, remove the DNS record, and let the cert expire unrenewed.
