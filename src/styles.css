@@ -5,9 +5,9 @@
   --bg: #fefefe;
   --ink: #1b1b1b;
   --ink-dim: rgba(27, 27, 27, 0.55);
-  --border: rgba(17, 54, 134, 0.25);
+  --border: rgba(17, 54, 134, 0.55);
   --seat-open: var(--bg);
-  --seat-open-border: rgba(17, 54, 134, 0.35);
+  --seat-open-border: rgba(17, 54, 134, 1);
   --venue-bg: #f1f8fd;
   --held: #d69e2e;
 
@@ -108,9 +108,22 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+  /* Scale down from full size rather than showing it 1:1 — full size
+     forces a lot of horizontal scrolling on a phone. Deliberately not
+     scaled down to "fits with no scroll" — seat circles are ~28px at
+     full size, and shrinking much past ~0.75x starts making them too
+     small to comfortably tap, so some residual horizontal scroll is
+     the tradeoff. Tune the multiplier/cap here if that balance feels
+     off in practice. */
   .sc-venue {
     width: auto;
-    min-width: var(--venue-w, 1200px);
+    min-width: min(calc(var(--venue-w, 1200px) * 0.75), 700px);
+  }
+}
+
+@media (max-width: 480px) {
+  .sc-venue {
+    min-width: min(calc(var(--venue-w, 1200px) * 0.6), 520px);
   }
 }
 
@@ -173,8 +186,16 @@
 .sc-seat.sc-delegate circle { stroke: var(--navy); fill: rgba(17, 54, 134, 0.08); }
 .sc-seat.sc-delegate text { fill: var(--navy); font-weight: 700; }
 
+.sc-seat.sc-chair circle { stroke: #b7791f; fill: rgba(214, 158, 46, 0.14); }
+.sc-seat.sc-chair text { fill: #92620f; font-weight: 700; }
+
+.sc-seat.sc-candidate circle { stroke: #b83280; fill: rgba(214, 64, 159, 0.12); }
+.sc-seat.sc-candidate text { fill: #97266d; font-weight: 700; }
+
 .sc-seat.sc-ga:hover circle,
-.sc-seat.sc-delegate:hover circle { stroke: var(--blue-hover); }
+.sc-seat.sc-delegate:hover circle,
+.sc-seat.sc-chair:hover circle,
+.sc-seat.sc-candidate:hover circle { stroke: var(--blue-hover); }
 
 .sc-seat.sc-selected circle {
   fill: var(--blue);
@@ -228,6 +249,8 @@
 .sc-legend-swatch.sold { background: transparent; border-color: var(--ink-dim); }
 .sc-legend-swatch.held { background: rgba(214, 158, 46, 0.15); border-color: var(--held); }
 .sc-legend-swatch.delegate { background: rgba(17, 54, 134, 0.08); border-color: var(--navy); }
+.sc-legend-swatch.chair { background: rgba(214, 158, 46, 0.14); border-color: #b7791f; }
+.sc-legend-swatch.candidate { background: rgba(214, 64, 159, 0.12); border-color: #b83280; }
 .sc-legend-swatch.actor { background: rgba(27, 27, 27, 0.04); border-color: var(--ink-dim); border-style: dashed; }
 
 .sc-panel {

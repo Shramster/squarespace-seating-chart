@@ -1,13 +1,20 @@
 // Seat helpers — keep block grids readable as literals below.
 // A() = actor (cast, never for public sale)
-// G() = general admission (individually selectable, default price)
-// D(label) = delegate seat, assigned to the state given by `label`
+// G() = gallery (individually selectable, no state attached)
+// D(label) = delegate seat, assigned to the state/territory given by `label`
+// C(label) = state chairperson seat, assigned to the state/territory given
+//   by `label` (has lines, unlike a plain delegate seat)
+// N(label) = candidate seat, assigned to the named individual given by
+//   `label` (shown as initials — the seat's tile color already
+//   disambiguates from state delegate/chair labels, so collisions are fine)
 function seat(type, opts = {}) {
   return { type, ...opts }
 }
 const A = () => seat('actor')
 const G = () => seat('ga')
 const D = (label) => seat('delegate', { label })
+const C = (label) => seat('chair', { label })
+const N = (name) => seat('candidate', { label: name })
 const _ = null // no seat here (gap / walkway / non-seat space)
 
 // Each seat is its own Squarespace product (see
@@ -18,7 +25,7 @@ const _ = null // no seat here (gap / walkway / non-seat space)
 // the frontend (which links straight to it) — keep them importing this
 // same function so they can't drift apart.
 export function seatProductSlug(showSku, seatCode) {
-  return `swing-night-${showSku}-${seatCode}`.toLowerCase()
+  return `convention-${showSku}-${seatCode}`.toLowerCase()
 }
 
 export function seatBuyLink(showSku, seatCode) {
@@ -32,8 +39,19 @@ export const CONFIG = {
   // going live.
   apiBase: import.meta.env?.DEV
     ? `http://${window.location.hostname}:8100`
-    : 'https://seatchart-demo.swseng.io', // stakeholder demo backend
+    : 'https://seatchart.swseng.io', // stakeholder demo backend
   defaultPrice: 25,
+
+  // Per-tier pricing for the four sellable seat types (actor seats are
+  // never sold, so have no entry here). Looked up by App.jsx when
+  // computing the selected seat's price — falls back to defaultPrice
+  // above for any type not listed here.
+  pricesByType: {
+    ga: 44,
+    delegate: 56,
+    chair: 68,
+    candidate: 76
+  },
 
   // Your Squarespace site's domain, no trailing slash. Per-seat buy links
   // are computed from this + seatProductSlug() above.
@@ -48,15 +66,16 @@ export const CONFIG = {
   shows: [{ sku: 'TEST01', label: 'STAKEHOLDER DEMO — DO NOT BUY' }],
 
   // The real room: several distinct seating blocks (some rotated) plus
-  // furniture, transcribed from seatchart.png (per-seat type/label) and
-  // cross-referenced against seatchart.txt (room envelope, stage/podium,
-  // piano ). This is a best-effort transcription —
-  // verify against the physical venue before going live.
+  // furniture, transcribed from SeatChart8222026.png (per-seat
+  // type/label). This is a best-effort transcription — verify against the
+  // physical venue before going live. Block names/ids below are the ones
+  // the user assigned when reviewing the chart.
   //
   // Seat identity: every seat's `code` is derived from its block id + grid
   // position (not its type/label), so reassigning a seat's role later
   // (e.g. which physical seats are "Actor" seats) is just editing that
-  // cell's A()/G()/D() in place below — no effect on sold-seat tracking.
+  // cell's A()/G()/D()/C()/N() in place below — no effect on sold-seat
+  // tracking.
   venue: {
     width: 1200,
     height: 900,
@@ -64,118 +83,143 @@ export const CONFIG = {
     walls: { x: 10, y: 10, w: 1180, h: 880, rx: 12 },
 
     furniture: [
-      { type: 'piano', x: 90, y: 60, w: 150, h: 90, label: 'Grand Piano' },
-      { type: 'stage', x: 620, y: 420, w: 200, h: 80, label: 'Stage', podium: { w: 70, h: 34 } },
+      { type: 'piano', x: 610, y: 30, w: 130, h: 90, label: 'Grand Piano' },
+      { type: 'table', x: 700, y: 400, w: 200, h: 80, label: 'Lectern', podium: { w: 26, h: 26 } }
     ],
 
     blocks: [
-      // Left block — tall, 4 seats across, 11 rows.
+      // Back Bleachers — tall, 4 seats across, 11 rows, split by a
+      // furniture gap (row 6) between the upper and lower halves.
       {
-        id: 'L', name: 'Left',
+        id: 'BACK', name: 'Back Bleachers',
         x: 40, y: 220, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
-          [G(), A(), A(), G()],
-          [D('TX'), G(), G(), G()],
-          [G(), G(), D('NM'), A()],
-          [D('CO'), G(), G(), D('HI')],
+          [A(), D('PA'), D('PA'), A()],
+          [D('PA'), G(), G(), C('DC')],
+          [G(), G(), G(), D('DC')],
           [G(), G(), G(), G()],
-          [D('PHIL'), G(), G(), A()],
-          [G(), A(), A(), D('AZ')],
-          [G(), A(), G(), G()],
-          [D('C.Z.'), G(), G(), G()],
-          [G(), D('RI'), G(), D('AK')],
-          [A(), G(), D('DE'), A()]
+          [G(), G(), G(), G()],
+          [_, _, _, A()],
+          [G(), A(), N('LU'), A()],
+          [G(), A(), D('IL'), G()],
+          [G(), N('MC'), G(), G()],
+          [G(), G(), G(), G()],
+          [A(), D('OK'), D('OK'), A()]
         ]
       },
 
-      // Top-center block — two pairs of columns split by a center aisle
-      // (col index 2 stays empty), plus two isolated seats on the far
-      // right (col index 5, only populated on rows 1-2).
+      // Left Bleachers — two pairs of columns split by a center aisle
+      // (col index 2 stays empty except for one front-row seat).
       {
-        id: 'T', name: 'Top Center',
+        id: 'LEFTBLEACHERS', name: 'Left Bleachers',
         x: 330, y: 60, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
-          [G(), G(), _, G(), D('SD'), _],
-          [A(), D('MN'), _, G(), A(), A()],
-          [D('WI'), G(), _, D('MT'), G(), G()],
-          [A(), D('WA'), _, G(), D('MI'), _]
+          [C('AK'), A(), A(), D('KY'), D('KY')],
+          [G(), C('PH'), _, A(), A()],
+          [G(), C('VIR'), _, D('MO'), D('MO')],
+          [A(), D('TN'), _, C('HI'), G()]
         ]
       },
 
-      // Center block, upper half — freestanding, below the top block.
+      // Left Aisle — freestanding block below Left Bleachers.
       {
-        id: 'M1', name: 'Center Upper',
+        id: 'LEFTAISLE', name: 'Left Aisle',
         x: 430, y: 275, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
-          [G(), G(), A(), A()],
-          [A(), G(), D('AL'), G()],
-          [D('WV'), D('DC'), G(), D('SC')],
+          [A(), D('VA'), A(), A()],
+          [G(), G(), C('WV'), N('BR')],
+          [C('TX'), D('MS'), G(), D('SC')],
           [A(), A(), A(), A()]
         ]
       },
 
-      // Center block, lower half — separated from M1 by a walkway gap.
+      // Right Aisle — separated from Left Aisle by a walkway gap.
       {
-        id: 'M2', name: 'Center Lower',
+        id: 'RIGHTAISLE', name: 'Right Aisle',
         x: 430, y: 490, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
-          [D('MD'), A(), G(), _],
-          [A(), G(), G(), G()],
-          [G(), D('NJ'), D('VT'), A()],
-          [D('ME'), G(), A(), A()]
+          [C('MD'), A(), D('NY'), _],
+          [G(), G(), D('NY'), D('NY')],
+          [G(), C('NJ'), C('VT'), A()],
+          [C('NH'), D('MA'), A(), A()]
         ]
       },
 
-      // Bottom-center block — mirrors the top block's aisle/isolated-seat
-      // layout.
+      // Right Bleachers — mirrors Left Bleachers' aisle layout, plus one
+      // isolated far-right column (col index 5, only rows 1 and 4).
       {
-        id: 'B', name: 'Bottom Center',
+        id: 'RIGHTBLEACHERS', name: 'Right Bleachers',
         x: 330, y: 705, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
-          [A(), A(), _, D('CT'), D('NH'), A()],
-          [G(), A(), _, A(), G(), A()],
-          [A(), G(), _, G(), G(), _],
-          [D('OR'), G(), G(), G(), A(), D('ID')]
+          [A(), A(), _, C('RI'), D('FL'), G()],
+          [D('CA'), A(), _, A(), G(), _],
+          [A(), D('CA'), _, G(), D('FL'), _],
+          [C('OR'), G(), A(), G(), C('WA'), A()]
         ]
       },
 
-      // Right-side blocks — rotated to follow the room's angled wall.
+      // Right-side blocks — rotated to follow the room's angled wall,
+      // each paired with a small satellite block of isolated seats that
+      // sit in front of its platform in the reference chart.
       {
-        id: 'R1', name: 'Right Front',
-        x: 780, y: 150, rotation: -30,
+        id: 'LEFTSTAGE', name: 'Left Stage',
+        x: 870, y: 135, rotation: -30,
         cellSize: 30, gap: 6,
         grid: [
-          [A(), G()],
-          [A(), D('UT')],
-          [G(), G()],
-          [A(), G()]
+          [G(), A()],
+          [A(), C('MT')],
+          [C('NM'), C('NV')],
+          [G(), G()]
         ]
       },
       {
-        id: 'R2', name: 'Right Center',
-        x: 840, y: 390, rotation: 0,
+        id: 'LEFTSTAGEISO', name: 'Left Stage — Front Seats',
+        x: 770, y: 240, rotation: 60,
+        cellSize: 28, gap: 18,
+        showFrame: false, // no section border/label — just 3 loose seats
+        grid: [
+          [C('CZ'), D('UT'), G()]
+        ]
+      },
+      {
+        id: 'CENTERSTAGE', name: 'Center Stage',
+        x: 940, y: 365, rotation: 0,
         cellSize: 30, gap: 6,
         grid: [
           [A(), A()],
-          [G(), G()],
-          [D('NV'), G()],
+          [N('MUR'), D('MI')],
+          [C('WI'), D('ND')],
           [A(), A()]
         ]
       },
+      // Right Stage platform: 4 seats in the front row, 3 in the back row.
+      // labelPos: 'top' centers the section label over the block's top
+      // (short) edge instead of the default top-right corner — the
+      // default reads awkwardly here because of this block's rotation.
+      // labelOffsetX nudges it right so it clears the Center Stage block.
       {
-        id: 'R3', name: 'Right Back',
-        x: 780, y: 630, rotation: 30,
+        id: 'RIGHTSTAGE', name: 'Right Stage',
+        x: 850, y: 650, rotation: -55,
         cellSize: 30, gap: 6,
+        labelPos: 'top',
+        labelOffsetX: 120,
         grid: [
-          [A(), G()],
-          [G(), D('VIR IS.')],
-          [A(), G()],
-          [A(), G()]
+          [D('IA'), D('IA'), C('MN'), G()],
+          [A(), D('MN'), A(), _]
+        ]
+      },
+      {
+        id: 'RIGHTSTAGEISO', name: 'Right Stage — Front Seats',
+        x: 800, y: 600, rotation: -55,
+        cellSize: 28, gap: 18,
+        showFrame: false, // no section border/label — just 3 loose seats
+        grid: [
+          [D('SEC'), N('RAY'), G()]
         ]
       }
     ]
