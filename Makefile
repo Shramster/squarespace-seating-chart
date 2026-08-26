@@ -17,6 +17,7 @@ dev:
 # accepts the LAN origin/host, and binds vite to 0.0.0.0.
 dev-lan:
 	@echo "Frontend will be reachable at http://$(LAN_IP):3000"
+	@node -e "require('qrcode-terminal').generate('http://$(LAN_IP):3000', {small: true})"
 	cd backend && LAN_IP=$(LAN_IP) docker compose -f docker-compose.yml -f docker-compose.lan.yml up -d
 	npm run dev -- --host 0.0.0.0
 	cd backend && docker compose -f docker-compose.yml -f docker-compose.lan.yml down
