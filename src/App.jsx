@@ -48,7 +48,9 @@ export default function App() {
   }
 
   const seat = selected ? SEAT_INDEX.get(selected) : null
-  const selectedMeta = seat ? { ...seat, price: seat.price ?? CONFIG.defaultPrice } : null
+  const selectedMeta = seat
+    ? { ...seat, price: CONFIG.pricesByType[seat.type] ?? seat.price ?? CONFIG.defaultPrice }
+    : null
   const seatSku = selected ? `${activeShow.sku}-${selected}` : null
 
   return (

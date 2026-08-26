@@ -1,6 +1,18 @@
 import { seatCode } from '../config.js'
 import Furniture from './Furniture.jsx'
 
+// Rotates a point around (cx, cy) by `angleDeg`, matching SVG's
+// rotate(angle, cx, cy) convention (clockwise for positive angle, since
+// SVG's y-axis points down).
+function rotatePoint(x, y, cx, cy, angleDeg) {
+  const rad = (angleDeg * Math.PI) / 180
+  const cos = Math.cos(rad)
+  const sin = Math.sin(rad)
+  const dx = x - cx
+  const dy = y - cy
+  return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos }
+}
+
 function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
   const pitch = block.cellSize + block.gap
   const cols = Math.max(...block.grid.map((row) => row.length))
@@ -17,20 +29,52 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
   const boxY = block.y - pad
   const boxWidth = width + pad * 2
   const boxHeight = height + pad * 2
+  // showFrame: false suppresses both the border and the section-name
+  // label — for small satellite blocks (isolated seats in front of a
+  // stage) that shouldn't read as their own labeled section.
+  const showFrame = block.showFrame !== false
+
+  // labelPos: 'top' keeps the section label screen-upright and above the
+  // block regardless of rotation, by computing the rotated box's screen
+  // bounding box up front and rendering the label outside the rotated
+  // <g> (so it isn't rotated along with the seats/box).
+  let topLabel = null
+  if (showFrame && block.labelPos === 'top') {
+    const corners = [
+      { x: boxX, y: boxY },
+      { x: boxX + boxWidth, y: boxY },
+      { x: boxX, y: boxY + boxHeight },
+      { x: boxX + boxWidth, y: boxY + boxHeight }
+    ].map((p) => rotatePoint(p.x, p.y, cx, cy, block.rotation || 0))
+    const minX = Math.min(...corners.map((p) => p.x))
+    const maxX = Math.max(...corners.map((p) => p.x))
+    const minY = Math.min(...corners.map((p) => p.y))
+    topLabel = {
+      x: (minX + maxX) / 2 + (block.labelOffsetX || 0),
+      y: minY - 6
+    }
+  }
 
   return (
-    <g transform={transform}>
-      <rect
-        className="sc-block-box"
-        x={boxX}
-        y={boxY}
-        width={boxWidth}
-        height={boxHeight}
-        rx={6}
-      />
-      <text className="sc-block-label" x={boxX + boxWidth} y={boxY - 6}>
-        {block.name || block.id}
-      </text>
+    <>
+      <g transform={transform}>
+        {showFrame && (
+          <>
+            <rect
+              className="sc-block-box"
+              x={boxX}
+              y={boxY}
+              width={boxWidth}
+              height={boxHeight}
+              rx={6}
+            />
+            {block.labelPos !== 'top' && (
+              <text className="sc-block-label" x={boxX + boxWidth} y={boxY - 6}>
+                {block.name || block.id}
+              </text>
+            )}
+          </>
+        )}
 
       {block.grid.map((row, r) =>
         row.map((cell, c) => {
@@ -92,7 +136,18 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
           )
         })
       )}
-    </g>
+      </g>
+      {topLabel && (
+        <text
+          className="sc-block-label"
+          x={topLabel.x}
+          y={topLabel.y}
+          textAnchor="middle"
+        >
+          {block.name || block.id}
+        </text>
+      )}
+    </>
   )
 }
 

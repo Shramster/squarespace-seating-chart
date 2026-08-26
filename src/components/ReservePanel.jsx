@@ -11,7 +11,7 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink, holdSta
     <div className="sc-panel">
       <div className="sc-panel-text">
         Seat <strong>{meta.label}</strong> · ${meta.price}
-        {meta.type === 'delegate' && (
+        {(meta.type === 'delegate' || meta.type === 'chair') && (
           <>
             <br />
             <span className="sc-panel-character">Delegation: {meta.label}</span>
