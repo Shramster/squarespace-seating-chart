@@ -48,9 +48,9 @@ export const CONFIG = {
   // above for any type not listed here.
   pricesByType: {
     ga: 44,
-    delegate: 56,
-    chair: 68,
-    candidate: 76
+    delegate: 68,
+    chair: 76,
+    candidate: 100
   },
 
   // Your Squarespace site's domain, no trailing slash. Per-seat buy links
@@ -77,14 +77,14 @@ export const CONFIG = {
   // cell's A()/G()/D()/C()/N() in place below — no effect on sold-seat
   // tracking.
   venue: {
-    width: 1200,
+    width: 900,
     height: 900,
 
-    walls: { x: 10, y: 10, w: 1180, h: 880, rx: 12 },
+    walls: { x: 10, y: 10, w: 880, h: 880, rx: 12 },
 
     furniture: [
-      { type: 'piano', x: 610, y: 30, w: 130, h: 90, label: 'Grand Piano' },
-      { type: 'table', x: 700, y: 400, w: 200, h: 80, label: 'Lectern', podium: { w: 26, h: 26 } }
+      { type: 'piano', x: 546.5, y: 785, w: 130, h: 90, label: 'Grand Piano' },
+      { type: 'table', x: 516.5, y: 400, w: 200, h: 80, label: 'Lectern', podium: { w: 26, h: 26 } }
     ],
 
     blocks: [
@@ -92,7 +92,7 @@ export const CONFIG = {
       // furniture gap (row 6) between the upper and lower halves.
       {
         id: 'BACK', name: 'Back Bleachers',
-        x: 40, y: 220, rotation: 0,
+        x: 76.5, y: 260, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
           [A(), D('PA'), D('PA'), A()],
@@ -113,7 +113,7 @@ export const CONFIG = {
       // (col index 2 stays empty except for one front-row seat).
       {
         id: 'LEFTBLEACHERS', name: 'Left Bleachers',
-        x: 330, y: 60, rotation: 0,
+        x: 266.5, y: 60, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
           [C('AK'), A(), A(), D('KY'), D('KY')],
@@ -126,7 +126,7 @@ export const CONFIG = {
       // Left Aisle — freestanding block below Left Bleachers.
       {
         id: 'LEFTAISLE', name: 'Left Aisle',
-        x: 430, y: 275, rotation: 0,
+        x: 306.5, y: 275, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
           [A(), D('VA'), A(), A()],
@@ -139,7 +139,7 @@ export const CONFIG = {
       // Right Aisle — separated from Left Aisle by a walkway gap.
       {
         id: 'RIGHTAISLE', name: 'Right Aisle',
-        x: 430, y: 490, rotation: 0,
+        x: 306.5, y: 490, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
           [C('MD'), A(), D('NY'), _],
@@ -153,13 +153,22 @@ export const CONFIG = {
       // isolated far-right column (col index 5, only rows 1 and 4).
       {
         id: 'RIGHTBLEACHERS', name: 'Right Bleachers',
-        x: 330, y: 705, rotation: 0,
+        x: 266.5, y: 710, rotation: 0,
         cellSize: 28, gap: 6,
         grid: [
-          [A(), A(), _, C('RI'), D('FL'), G()],
-          [D('CA'), A(), _, A(), G(), _],
-          [A(), D('CA'), _, G(), D('FL'), _],
-          [C('OR'), G(), A(), G(), C('WA'), A()]
+          [A(), A(), _, C('RI'), D('FL')],
+          [D('CA'), A(), _, A(), G(),],
+          [A(), D('CA'), _, G(), D('FL'),],
+          [C('OR'), G(), A(), G(), C('WA')]
+        ]
+      },
+      {
+        id: 'RIGHTBLEACHERSISO', name: 'Right Bleacher — Floor Seats',
+        x: 446.5, y: 730, rotation: 90,
+        cellSize: 28, gap: 10,
+        showFrame: false, // no section border/label — just 3 loose seats
+        grid: [
+          [G(), A()]
         ]
       },
 
@@ -168,7 +177,7 @@ export const CONFIG = {
       // sit in front of its platform in the reference chart.
       {
         id: 'LEFTSTAGE', name: 'Left Stage',
-        x: 870, y: 135, rotation: -30,
+        x: 706.5, y: 135, rotation: -30,
         cellSize: 30, gap: 6,
         grid: [
           [G(), A()],
@@ -179,7 +188,7 @@ export const CONFIG = {
       },
       {
         id: 'LEFTSTAGEISO', name: 'Left Stage — Front Seats',
-        x: 770, y: 240, rotation: 60,
+        x: 606.5, y: 240, rotation: 60,
         cellSize: 28, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
         grid: [
@@ -188,7 +197,7 @@ export const CONFIG = {
       },
       {
         id: 'CENTERSTAGE', name: 'Center Stage',
-        x: 940, y: 365, rotation: 0,
+        x: 756.5, y: 365, rotation: 0,
         cellSize: 30, gap: 6,
         grid: [
           [A(), A()],
@@ -197,6 +206,21 @@ export const CONFIG = {
           [A(), A()]
         ]
       },
+      // Two lone actor seats flanking the Lectern, one on each side.
+      {
+        id: 'LECTERNL', name: 'Lectern — Left',
+        x: 531.5, y: 360, rotation: 0,
+        cellSize: 30, gap: 6,
+        showFrame: false,
+        grid: [[A()]]
+      },
+      {
+        id: 'LECTERNR', name: 'Lectern — Right',
+        x: 531.5, y: 495, rotation: 0,
+        cellSize: 30, gap: 6,
+        showFrame: false,
+        grid: [[A()]]
+      },
       // Right Stage platform: 4 seats in the front row, 3 in the back row.
       // labelPos: 'top' centers the section label over the block's top
       // (short) edge instead of the default top-right corner — the
@@ -204,18 +228,18 @@ export const CONFIG = {
       // labelOffsetX nudges it right so it clears the Center Stage block.
       {
         id: 'RIGHTSTAGE', name: 'Right Stage',
-        x: 850, y: 650, rotation: -55,
+        x: 666.5, y: 650, rotation: -55,
         cellSize: 30, gap: 6,
         labelPos: 'top',
         labelOffsetX: 120,
         grid: [
           [D('IA'), D('IA'), C('MN'), G()],
-          [A(), D('MN'), A(), _]
+          [A(), D('MN'), A(), G()]
         ]
       },
       {
         id: 'RIGHTSTAGEISO', name: 'Right Stage — Front Seats',
-        x: 800, y: 600, rotation: -55,
+        x: 616.5, y: 600, rotation: -55,
         cellSize: 28, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
         grid: [

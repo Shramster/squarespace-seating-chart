@@ -12,13 +12,20 @@
   --held: #d69e2e;
 
   box-sizing: border-box;
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 32px 20px 40px;
   background: var(--bg);
   color: var(--ink);
   font-family: Georgia, 'Times New Roman', serif;
   border-radius: 6px;
+  /* Fluid: 19px at <=320px viewport width, 16px at >=900px, linear
+     between (no breakpoints to jump at). Every em-sized text rule below
+     scales with it — the venue/svg text is untouched (fixed px, by
+     design: seat labels need to stay legible at a known size, not grow
+     with the rest of the UI). Retune by changing the two anchor values
+     here. */
+  font-size: clamp(16px, 20.655px - 0.517vw, 19px);
 }
 .seat-chart *,
 .seat-chart *::before,
@@ -29,13 +36,13 @@
 .sc-header { text-align: center; margin-bottom: 6px; }
 .sc-eyebrow {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
+  font-size: 0.6875em;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--blue);
   margin: 0 0 6px;
 }
-.sc-title { font-size: 26px; letter-spacing: 0.04em; margin: 0 0 16px; color: var(--navy); }
+.sc-title { font-size: 1.625em; letter-spacing: 0.04em; margin: 0 0 16px; color: var(--navy); }
 
 .sc-tabs {
   display: flex;
@@ -46,7 +53,7 @@
 }
 .sc-tab-arrow {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 18px;
+  font-size: 1.125em;
   line-height: 1;
   background: transparent;
   color: var(--navy);
@@ -69,7 +76,7 @@
 
 .sc-tab-select {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px;
+  font-size: 0.8125em;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--navy);
@@ -87,44 +94,36 @@
 .sc-status-note {
   text-align: center;
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
+  font-size: 0.75em;
   font-weight: 600;
   color: var(--navy);
   margin-bottom: 16px;
 }
 
+/* The venue is capped by max-height and shrinks via aspect-ratio, letting
+   the browser fit it to both dimensions with no scrolling — the wrap just
+   centers it. The venue/svg text stays fixed px, by design: seat labels
+   need to stay legible at a known size, not shrink with the rest of the
+   UI. */
 .sc-venue-wrap {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 .sc-venue {
-  width: 100%;
-  height: auto;
   background: var(--venue-bg);
-}
-
-@media (max-width: 760px) {
-  .sc-venue-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* Scale down from full size rather than showing it 1:1 — full size
-     forces a lot of horizontal scrolling on a phone. Deliberately not
-     scaled down to "fits with no scroll" — seat circles are ~28px at
-     full size, and shrinking much past ~0.75x starts making them too
-     small to comfortably tap, so some residual horizontal scroll is
-     the tradeoff. Tune the multiplier/cap here if that balance feels
-     off in practice. */
-  .sc-venue {
-    width: auto;
-    min-width: min(calc(var(--venue-w, 1200px) * 0.75), 700px);
-  }
-}
-
-@media (max-width: 480px) {
-  .sc-venue {
-    min-width: min(calc(var(--venue-w, 1200px) * 0.6), 520px);
-  }
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  aspect-ratio: var(--venue-w) / var(--venue-h);
+  /* Fluid: 60vh at <=320px viewport width, 100vh at >=760px — 100vh is
+     high enough that max-width/100% and .seat-chart's own 960px cap
+     become the actually-binding constraint on wide screens, reproducing
+     "no cap" without a literal `none` (which can't be part of a
+     continuous formula). Retune by changing the two anchor values here. */
+  max-height: clamp(60vh, 30.91vh + 9.09vw, 100vh);
 }
 
 .sc-wall {
@@ -233,7 +232,7 @@
   gap: 18px;
   margin-top: 26px;
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 11px;
+  font-size: 0.6875em;
   color: var(--ink-dim);
   flex-wrap: wrap;
 }
@@ -266,15 +265,15 @@
   gap: 14px;
   flex-wrap: wrap;
 }
-.sc-panel-text { font-size: 13px; color: var(--ink); line-height: 1.5; }
-.sc-panel-text strong { color: var(--navy); font-size: 15px; }
+.sc-panel-text { font-size: 0.8125em; color: var(--ink); line-height: 1.5; }
+.sc-panel-text strong { color: var(--navy); font-size: 1.1538em; }
 .sc-panel-character { color: var(--ink-dim); font-style: italic; }
-.sc-panel-empty { color: var(--ink-dim); font-size: 13px; }
-.sc-panel-sku { color: var(--ink-dim); font-size: 11px; letter-spacing: 0.03em; }
-.sc-panel-error { color: #b7231d; font-size: 12px; font-weight: 700; flex-basis: 100%; }
+.sc-panel-empty { color: var(--ink-dim); font-size: 0.8125em; }
+.sc-panel-sku { color: var(--ink-dim); font-size: 0.6875em; letter-spacing: 0.03em; }
+.sc-panel-error { color: #b7231d; font-size: 0.75em; font-weight: 700; flex-basis: 100%; }
 .sc-reserve-btn {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px;
+  font-size: 0.8125em;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   background: var(--blue);
@@ -289,7 +288,3 @@
 }
 .sc-reserve-btn:hover { background: var(--blue-hover); }
 .sc-reserve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-@media (max-width: 480px) {
-  .sc-title { font-size: 21px; }
-}

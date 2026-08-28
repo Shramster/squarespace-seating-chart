@@ -153,7 +153,7 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
 
 export default function VenueMap({ venue, soldSeats, heldSeats, selected, onSelectSeat }) {
   return (
-    <div className="sc-venue-wrap" style={{ '--venue-w': `${venue.width}px` }}>
+    <div className="sc-venue-wrap" style={{ '--venue-w': venue.width, '--venue-h': venue.height }}>
       <svg
         className="sc-venue"
         viewBox={`0 0 ${venue.width} ${venue.height}`}
