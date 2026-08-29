@@ -14,10 +14,10 @@
   box-sizing: border-box;
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 20px 40px;
+  padding: 0px 0px 40px;
   background: var(--bg);
   color: var(--ink);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: Georgia, "Times New Roman", serif;
   border-radius: 6px;
   /* Fluid: 19px at <=320px viewport width, 16px at >=900px, linear
      between (no breakpoints to jump at). Every em-sized text rule below
@@ -33,16 +33,27 @@
   box-sizing: border-box;
 }
 
-.sc-header { text-align: center; margin-bottom: 6px; }
+.sc-header {
+  text-align: center;
+  margin-bottom: 6px;
+}
 .sc-eyebrow {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.6875em;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--blue);
   margin: 0 0 6px;
 }
-.sc-title { font-size: 1.625em; letter-spacing: 0.04em; margin: 0 0 16px; color: var(--navy); }
+.sc-title {
+  font-size: 1.25em;
+  letter-spacing: 0.04em;
+  margin: 0 0 16px;
+  color: var(--navy);
+}
 
 .sc-tabs {
   display: flex;
@@ -52,7 +63,10 @@
   margin-bottom: 26px;
 }
 .sc-tab-arrow {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 1.125em;
   line-height: 1;
   background: transparent;
@@ -72,10 +86,16 @@
   border-color: var(--blue);
   color: var(--bg);
 }
-.sc-tab-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+.sc-tab-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 .sc-tab-select {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.8125em;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -93,38 +113,62 @@
 
 .sc-status-note {
   text-align: center;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.75em;
   font-weight: 600;
   color: var(--navy);
   margin-bottom: 16px;
 }
 
-/* The venue is capped by max-height and shrinks via aspect-ratio, letting
-   the browser fit it to both dimensions with no scrolling — the wrap just
-   centers it. The venue/svg text stays fixed px, by design: seat labels
-   need to stay legible at a known size, not shrink with the rest of the
-   UI. */
 .sc-venue-wrap {
   margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 6px;
+  border: 1px solid var(--border);
 }
 
 .sc-venue {
+  height: 70vh;
   background: var(--venue-bg);
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  aspect-ratio: var(--venue-w) / var(--venue-h);
-  /* Fluid: 60vh at <=320px viewport width, 100vh at >=760px — 100vh is
-     high enough that max-width/100% and .seat-chart's own 960px cap
-     become the actually-binding constraint on wide screens, reproducing
-     "no cap" without a literal `none` (which can't be part of a
-     continuous formula). Retune by changing the two anchor values here. */
-  max-height: clamp(60vh, 30.91vh + 9.09vw, 100vh);
 }
+
+@media (min-width: 760px) {
+  .sc-venue-wrap {
+    /* overflow-x: auto; */
+    /* -webkit-overflow-scrolling: touch; */
+    /* max-height: 60vh; */
+    /* height: auto; */
+    max-width: 400px;
+  }
+  /* Scale down from full size rather than showing it 1:1 — full size
+     forces a lot of horizontal scrolling on a phone. Deliberately not
+     scaled down to "fits with no scroll" — seat circles are ~28px at
+     full size, and shrinking much past ~0.75x starts making them too
+     small to comfortably tap, so some residual horizontal scroll is
+     the tradeoff. Tune the multiplier/cap here if that balance feels
+     off in practice. */
+  .sc-venue {
+    /* min-width: min(calc(var(--venue-w, 1200px) * 0.75), 700px); */
+    /**/
+    /* height: auto; */
+    /* width: auto; */
+  }
+}
+
+/* Below 480px the venue stops shrinking further and the wrap scrolls
+   horizontally instead — .sc-wall is drawn as part of the SVG content
+   (not a fixed viewport frame), so it scrolls along with everything
+   else and stays the outer border of the whole map, not just whatever
+   slice is currently visible. */
+/* @media (max-width: 480px) { */
+/*   .sc-venue { */
+/*     min-height: max(calc(var(--venue-w, 1200px) * 0.6), 520px); */
+/*   } */
+/* } */
 
 .sc-wall {
   fill: none;
@@ -140,15 +184,31 @@
 }
 .sc-furniture text {
   fill: var(--ink-dim);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 16px;
   text-anchor: middle;
   dominant-baseline: middle;
 }
-.sc-stage rect { stroke-dasharray: none; stroke: var(--navy); }
-.sc-stage .sc-podium { fill: var(--bg); }
-.sc-stage text { fill: var(--navy); letter-spacing: 0.15em; text-transform: uppercase; font-size: 11px; }
-.sc-wheelchair-icon { font-size: 22px; fill: var(--blue-hover); }
+.sc-stage rect {
+  stroke-dasharray: none;
+  stroke: var(--navy);
+}
+.sc-stage .sc-podium {
+  fill: var(--bg);
+}
+.sc-stage text {
+  fill: var(--navy);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.sc-wheelchair-icon {
+  font-size: 22px;
+  fill: var(--blue-hover);
+}
 
 .sc-block-box {
   fill: none;
@@ -158,7 +218,10 @@
 }
 .sc-block-label {
   fill: var(--navy);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -171,36 +234,64 @@
   stroke: var(--seat-open-border);
   stroke-width: 1.5;
   cursor: pointer;
-  transition: stroke 0.12s ease, fill 0.12s ease;
+  transition:
+    stroke 0.12s ease,
+    fill 0.12s ease;
 }
 .sc-seat text {
   fill: var(--ink-dim);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 14px;
   text-anchor: middle;
   dominant-baseline: middle;
   pointer-events: none;
 }
 
-.sc-seat.sc-delegate circle { stroke: var(--navy); fill: rgba(17, 54, 134, 0.08); }
-.sc-seat.sc-delegate text { fill: var(--navy); font-weight: 700; }
+.sc-seat.sc-delegate circle {
+  stroke: var(--navy);
+  fill: rgba(17, 54, 134, 0.08);
+}
+.sc-seat.sc-delegate text {
+  fill: var(--navy);
+  font-weight: 700;
+}
 
-.sc-seat.sc-chair circle { stroke: #b7791f; fill: rgba(214, 158, 46, 0.14); }
-.sc-seat.sc-chair text { fill: #92620f; font-weight: 700; }
+.sc-seat.sc-chair circle {
+  stroke: #b7791f;
+  fill: rgba(214, 158, 46, 0.14);
+}
+.sc-seat.sc-chair text {
+  fill: #92620f;
+  font-weight: 700;
+}
 
-.sc-seat.sc-candidate circle { stroke: #b83280; fill: rgba(214, 64, 159, 0.12); }
-.sc-seat.sc-candidate text { fill: #97266d; font-weight: 700; }
+.sc-seat.sc-candidate circle {
+  stroke: #b83280;
+  fill: rgba(214, 64, 159, 0.12);
+}
+.sc-seat.sc-candidate text {
+  fill: #97266d;
+  font-weight: 700;
+}
 
 .sc-seat.sc-ga:hover circle,
 .sc-seat.sc-delegate:hover circle,
 .sc-seat.sc-chair:hover circle,
-.sc-seat.sc-candidate:hover circle { stroke: var(--blue-hover); }
+.sc-seat.sc-candidate:hover circle {
+  stroke: var(--blue-hover);
+}
 
 .sc-seat.sc-selected circle {
   fill: var(--blue);
   stroke: var(--navy);
 }
-.sc-seat.sc-selected text { fill: var(--bg); font-weight: 700; }
+.sc-seat.sc-selected text {
+  fill: var(--bg);
+  font-weight: 700;
+}
 
 .sc-seat.sc-sold circle {
   fill: transparent;
@@ -224,19 +315,29 @@
   opacity: 0.6;
 }
 
-.sc-seat:focus-visible circle { outline: 2px solid var(--blue-hover); outline-offset: 2px; }
+.sc-seat:focus-visible circle {
+  outline: 2px solid var(--blue-hover);
+  outline-offset: 2px;
+}
 
 .sc-legend {
   display: flex;
   justify-content: center;
   gap: 18px;
   margin-top: 26px;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.6875em;
   color: var(--ink-dim);
   flex-wrap: wrap;
 }
-.sc-legend-item { display: flex; align-items: center; gap: 6px; }
+.sc-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .sc-legend-swatch {
   width: 14px;
   height: 12px;
@@ -244,13 +345,35 @@
   border: 1.5px solid var(--seat-open-border);
   background: var(--seat-open);
 }
-.sc-legend-swatch.gold { background: var(--blue); border-color: var(--blue-hover); }
-.sc-legend-swatch.sold { background: transparent; border-color: var(--ink-dim); }
-.sc-legend-swatch.held { background: rgba(214, 158, 46, 0.15); border-color: var(--held); }
-.sc-legend-swatch.delegate { background: rgba(17, 54, 134, 0.08); border-color: var(--navy); }
-.sc-legend-swatch.chair { background: rgba(214, 158, 46, 0.14); border-color: #b7791f; }
-.sc-legend-swatch.candidate { background: rgba(214, 64, 159, 0.12); border-color: #b83280; }
-.sc-legend-swatch.actor { background: rgba(27, 27, 27, 0.04); border-color: var(--ink-dim); border-style: dashed; }
+.sc-legend-swatch.gold {
+  background: var(--blue);
+  border-color: var(--blue-hover);
+}
+.sc-legend-swatch.sold {
+  background: transparent;
+  border-color: var(--ink-dim);
+}
+.sc-legend-swatch.held {
+  background: rgba(214, 158, 46, 0.15);
+  border-color: var(--held);
+}
+.sc-legend-swatch.delegate {
+  background: rgba(17, 54, 134, 0.08);
+  border-color: var(--navy);
+}
+.sc-legend-swatch.chair {
+  background: rgba(214, 158, 46, 0.14);
+  border-color: #b7791f;
+}
+.sc-legend-swatch.candidate {
+  background: rgba(214, 64, 159, 0.12);
+  border-color: #b83280;
+}
+.sc-legend-swatch.actor {
+  background: rgba(27, 27, 27, 0.04);
+  border-color: var(--ink-dim);
+  border-style: dashed;
+}
 
 .sc-panel {
   margin-top: 28px;
@@ -258,21 +381,49 @@
   border: 1px solid var(--border);
   border-radius: 4px;
   background: rgba(27, 160, 243, 0.06);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
 }
-.sc-panel-text { font-size: 0.8125em; color: var(--ink); line-height: 1.5; }
-.sc-panel-text strong { color: var(--navy); font-size: 1.1538em; }
-.sc-panel-character { color: var(--ink-dim); font-style: italic; }
-.sc-panel-empty { color: var(--ink-dim); font-size: 0.8125em; }
-.sc-panel-sku { color: var(--ink-dim); font-size: 0.6875em; letter-spacing: 0.03em; }
-.sc-panel-error { color: #b7231d; font-size: 0.75em; font-weight: 700; flex-basis: 100%; }
+.sc-panel-text {
+  font-size: 0.8125em;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.sc-panel-text strong {
+  color: var(--navy);
+  font-size: 1.1538em;
+}
+.sc-panel-character {
+  color: var(--ink-dim);
+  font-style: italic;
+}
+.sc-panel-empty {
+  color: var(--ink-dim);
+  font-size: 0.8125em;
+}
+.sc-panel-sku {
+  color: var(--ink-dim);
+  font-size: 0.6875em;
+  letter-spacing: 0.03em;
+}
+.sc-panel-error {
+  color: #b7231d;
+  font-size: 0.75em;
+  font-weight: 700;
+  flex-basis: 100%;
+}
 .sc-reserve-btn {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 0.8125em;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -286,5 +437,10 @@
   text-decoration: none;
   display: inline-block;
 }
-.sc-reserve-btn:hover { background: var(--blue-hover); }
-.sc-reserve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.sc-reserve-btn:hover {
+  background: var(--blue-hover);
+}
+.sc-reserve-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

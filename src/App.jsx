@@ -76,9 +76,6 @@ export default function App() {
         selected={selected}
         onSelectSeat={setSelected}
       />
-
-      <Legend />
-
       <ReservePanel
         selected={selected}
         meta={selectedMeta}
@@ -88,6 +85,7 @@ export default function App() {
         holdError={holdError}
         onReserve={handleReserve}
       />
+      <Legend />
     </div>
   )
 }

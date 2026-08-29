@@ -160,14 +160,6 @@ export default function VenueMap({ venue, soldSeats, heldSeats, selected, onSele
         role="img"
         aria-label="Venue seat map"
       >
-        <rect
-          className="sc-wall"
-          x={venue.walls.x}
-          y={venue.walls.y}
-          width={venue.walls.w}
-          height={venue.walls.h}
-          rx={venue.walls.rx}
-        />
 
         {venue.furniture.map((piece, i) => (
           <Furniture key={i} piece={piece} />
