@@ -8,8 +8,15 @@
   --border: rgba(17, 54, 134, 0.55);
   --seat-open: var(--bg);
   --seat-open-border: rgba(17, 54, 134, 1);
-  --venue-bg: #f1f8fd;
+  --venue-bg: #cfe6fb;
   --held: #d69e2e;
+  --seat-delegate: #3ea6f0;
+  --seat-delegate-border: #1c7dc4;
+  --seat-chair: #11316f;
+  --seat-candidate: #0d0d0d;
+  --seat-unavailable: #c7ccd4;
+  --furniture-fill: #14171a;
+  --star: #22d3ee;
 
   box-sizing: border-box;
   max-width: 960px;
@@ -124,15 +131,16 @@
 }
 
 .sc-venue-wrap {
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  border-radius: 6px;
-  border: 1px solid var(--border);
+  border-radius: 16px;
+  border: 8px solid var(--navy);
 }
 
 .sc-venue {
-  height: 70vh;
+  /* height: auto; */
   background: var(--venue-bg);
 }
 
@@ -142,7 +150,7 @@
     /* -webkit-overflow-scrolling: touch; */
     /* max-height: 60vh; */
     /* height: auto; */
-    max-width: 400px;
+    /* max-width: 400px; */
   }
   /* Scale down from full size rather than showing it 1:1 — full size
      forces a lot of horizontal scrolling on a phone. Deliberately not
@@ -159,45 +167,51 @@
   }
 }
 
+.sc-panel-scroll-hint {
+  display: none;
+}
 /* Below 480px the venue stops shrinking further and the wrap scrolls
    horizontally instead — .sc-wall is drawn as part of the SVG content
    (not a fixed viewport frame), so it scrolls along with everything
    else and stays the outer border of the whole map, not just whatever
    slice is currently visible. */
-/* @media (max-width: 480px) { */
-/*   .sc-venue { */
-/*     min-height: max(calc(var(--venue-w, 1200px) * 0.6), 520px); */
-/*   } */
-/* } */
+@media (max-width: 480px) {
+  .sc-venue {
+    height: 60vmax;
+  }
+  .sc-panel-scroll-hint {
+    display: inline;
+  }
+}
 
 .sc-wall {
   fill: none;
-  stroke: var(--border);
-  stroke-width: 2;
+  stroke: var(--navy);
+  stroke-width: 4;
 }
 
 .sc-furniture rect {
-  fill: none;
-  stroke: var(--ink-dim);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
+  fill: var(--furniture-fill);
+  stroke: none;
 }
 .sc-furniture text {
-  fill: var(--ink-dim);
+  fill: var(--bg);
   font-family:
     system-ui,
     -apple-system,
     sans-serif;
   font-size: 16px;
+  font-weight: 700;
   text-anchor: middle;
   dominant-baseline: middle;
 }
 .sc-stage rect {
-  stroke-dasharray: none;
+  fill: none;
   stroke: var(--navy);
+  stroke-width: 2;
 }
 .sc-stage .sc-podium {
-  fill: var(--bg);
+  fill: var(--seat-delegate);
 }
 .sc-stage text {
   fill: var(--navy);
@@ -205,16 +219,23 @@
   text-transform: uppercase;
   font-size: 11px;
 }
+.sc-table rect {
+  fill: var(--bg);
+  stroke: var(--navy);
+  stroke-width: 2;
+}
+.sc-table .sc-podium {
+  fill: none;
+}
 .sc-wheelchair-icon {
   font-size: 22px;
   fill: var(--blue-hover);
 }
 
 .sc-block-box {
-  fill: none;
-  stroke: var(--border);
-  stroke-width: 1.25;
-  stroke-dasharray: 3 3;
+  fill: var(--bg);
+  stroke: var(--blue);
+  stroke-width: 2;
 }
 .sc-block-label {
   fill: var(--navy);
@@ -222,59 +243,42 @@
     system-ui,
     -apple-system,
     sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  text-anchor: end;
 }
 
 .sc-seat circle {
   fill: var(--seat-open);
   stroke: var(--seat-open-border);
-  stroke-width: 1.5;
+  stroke-width: 2;
   cursor: pointer;
   transition:
     stroke 0.12s ease,
     fill 0.12s ease;
 }
-.sc-seat text {
-  fill: var(--ink-dim);
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
-  font-size: 14px;
-  text-anchor: middle;
-  dominant-baseline: middle;
+.sc-seat-star {
+  fill: var(--star);
+  stroke: var(--star);
+  stroke-width: 0.5;
+  stroke-linejoin: bevel;
   pointer-events: none;
 }
 
 .sc-seat.sc-delegate circle {
-  stroke: var(--navy);
-  fill: rgba(17, 54, 134, 0.08);
-}
-.sc-seat.sc-delegate text {
-  fill: var(--navy);
-  font-weight: 700;
+  stroke: var(--seat-delegate-border);
+  fill: var(--seat-delegate);
 }
 
 .sc-seat.sc-chair circle {
-  stroke: #b7791f;
-  fill: rgba(214, 158, 46, 0.14);
-}
-.sc-seat.sc-chair text {
-  fill: #92620f;
-  font-weight: 700;
+  stroke: var(--seat-chair);
+  fill: var(--seat-chair);
 }
 
 .sc-seat.sc-candidate circle {
-  stroke: #b83280;
-  fill: rgba(214, 64, 159, 0.12);
-}
-.sc-seat.sc-candidate text {
-  fill: #97266d;
-  font-weight: 700;
+  stroke: var(--seat-candidate);
+  fill: var(--seat-candidate);
 }
 
 .sc-seat.sc-ga:hover circle,
@@ -285,34 +289,29 @@
 }
 
 .sc-seat.sc-selected circle {
-  fill: var(--blue);
   stroke: var(--navy);
-}
-.sc-seat.sc-selected text {
-  fill: var(--bg);
-  font-weight: 700;
+  stroke-width: 2.5;
 }
 
 .sc-seat.sc-sold circle {
-  fill: transparent;
-  stroke: var(--ink-dim);
-  opacity: 0.55;
+  fill: var(--seat-unavailable);
+  stroke: var(--seat-unavailable);
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .sc-seat.sc-held circle {
-  fill: rgba(214, 158, 46, 0.15);
+  fill: var(--seat-unavailable);
   stroke: var(--held);
-  opacity: 0.75;
+  stroke-width: 2;
+  opacity: 0.85;
   cursor: not-allowed;
 }
 
 .sc-seat.sc-actor circle {
-  fill: rgba(27, 27, 27, 0.24);
-  stroke: var(--ink-dim);
-  stroke-dasharray: 2 2;
+  fill: var(--seat-unavailable);
+  stroke: var(--seat-unavailable);
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .sc-seat:focus-visible circle {
@@ -346,33 +345,46 @@
   background: var(--seat-open);
 }
 .sc-legend-swatch.gold {
-  background: var(--blue);
-  border-color: var(--blue-hover);
+  background: var(--seat-open);
+  border-color: var(--navy);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sc-legend-star {
+  width: 10px;
+  height: 10px;
+  fill: var(--star);
+  stroke: var(--navy);
+  stroke-width: 0.75;
+  stroke-linejoin: round;
+  rotate: 90deg;
 }
 .sc-legend-swatch.sold {
-  background: transparent;
-  border-color: var(--ink-dim);
+  background: var(--seat-unavailable);
+  border-color: var(--seat-unavailable);
+  opacity: 0.5;
 }
 .sc-legend-swatch.held {
-  background: rgba(214, 158, 46, 0.15);
+  background: var(--seat-unavailable);
   border-color: var(--held);
 }
 .sc-legend-swatch.delegate {
-  background: rgba(17, 54, 134, 0.08);
-  border-color: var(--navy);
+  background: var(--seat-delegate);
+  border-color: var(--seat-delegate-border);
 }
 .sc-legend-swatch.chair {
-  background: rgba(214, 158, 46, 0.14);
-  border-color: #b7791f;
+  background: var(--seat-chair);
+  border-color: var(--seat-chair);
 }
 .sc-legend-swatch.candidate {
-  background: rgba(214, 64, 159, 0.12);
-  border-color: #b83280;
+  background: var(--seat-candidate);
+  border-color: var(--seat-candidate);
 }
 .sc-legend-swatch.actor {
-  background: rgba(27, 27, 27, 0.04);
-  border-color: var(--ink-dim);
-  border-style: dashed;
+  background: var(--seat-unavailable);
+  border-color: var(--seat-unavailable);
 }
 
 .sc-panel {

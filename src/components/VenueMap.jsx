@@ -13,7 +13,31 @@ function rotatePoint(x, y, cx, cy, angleDeg) {
   return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos }
 }
 
-function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
+// Point string for a 5-point star centered at (cx, cy). `tipAngle` (radians,
+// 0 = pointing right, increasing clockwise to match rotatePoint/SVG's
+// y-down convention) sets the direction of the first point — defaults to
+// straight up.
+function starPoints(cx, cy, outerR, innerR, tipAngle = -Math.PI / 2) {
+  const points = []
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outerR : innerR
+    const angle = tipAngle + (Math.PI / 5) * i
+    points.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`)
+  }
+  return points.join(' ')
+}
+
+// Local (pre-rotation) tip angle for a seat's star so that, once the
+// block's own rotate(...) transform is applied, the tip points at
+// `venueCenter` on screen — i.e. toward the stage/action every block
+// surrounds, regardless of that block's own rotation.
+function starTipAngle(seatX, seatY, cx, cy, rotationDeg, venueCenter) {
+  const screenSeat = rotatePoint(seatX, seatY, cx, cy, rotationDeg)
+  const screenAngle = Math.atan2(venueCenter.y - screenSeat.y, venueCenter.x - screenSeat.x)
+  return screenAngle - (rotationDeg * Math.PI) / 180
+}
+
+function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat, venueCenter }) {
   const pitch = block.cellSize + block.gap
   const cols = Math.max(...block.grid.map((row) => row.length))
   const width = cols * pitch - block.gap
@@ -24,7 +48,7 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
     ? `rotate(${block.rotation} ${cx} ${cy})`
     : undefined
 
-  const pad = block.cellSize / 2 + 10
+  const pad = block.cellSize / 2 
   const boxX = block.x - pad
   const boxY = block.y - pad
   const boxWidth = width + pad * 2
@@ -34,12 +58,17 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
   // stage) that shouldn't read as their own labeled section.
   const showFrame = block.showFrame !== false
 
-  // labelPos: 'top' keeps the section label screen-upright and above the
-  // block regardless of rotation, by computing the rotated box's screen
-  // bounding box up front and rendering the label outside the rotated
-  // <g> (so it isn't rotated along with the seats/box).
-  let topLabel = null
-  if (showFrame && block.labelPos === 'top') {
+  // labelPos: 'top' | 'bottom' | 'left' | 'right' keeps the section label
+  // screen-upright and anchored to that side of the block regardless of
+  // rotation, by computing the rotated box's screen bounding box up front
+  // and rendering the label outside the rotated <g> (so it isn't rotated
+  // along with the seats/box). labelOffsetX/labelOffsetY nudge the
+  // computed position further, for cases where the default anchor still
+  // reads awkwardly next to a neighboring block. Omitting labelPos keeps
+  // the legacy behavior: a label inside the rotated <g>, anchored to the
+  // block's top-right corner pre-rotation (so it rotates along with it).
+  let sideLabel = null
+  if (showFrame && ['top', 'bottom', 'left', 'right'].includes(block.labelPos)) {
     const corners = [
       { x: boxX, y: boxY },
       { x: boxX + boxWidth, y: boxY },
@@ -49,10 +78,17 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
     const minX = Math.min(...corners.map((p) => p.x))
     const maxX = Math.max(...corners.map((p) => p.x))
     const minY = Math.min(...corners.map((p) => p.y))
-    topLabel = {
-      x: (minX + maxX) / 2 + (block.labelOffsetX || 0),
-      y: minY - 6
+    const maxY = Math.max(...corners.map((p) => p.y))
+    const offsetX = block.labelOffsetX || 0
+    const offsetY = block.labelOffsetY || 0
+    const bySide = {
+      top: { x: (minX + maxX) / 2, y: minY - 6, anchor: 'middle' },
+      bottom: { x: (minX + maxX) / 2, y: maxY + 16, anchor: 'middle' },
+      left: { x: minX - 6, y: (minY + maxY) / 2, anchor: 'end' },
+      right: { x: maxX + 6, y: (minY + maxY) / 2, anchor: 'start' }
     }
+    const pos = bySide[block.labelPos]
+    sideLabel = { x: pos.x + offsetX, y: pos.y + offsetY, anchor: pos.anchor }
   }
 
   return (
@@ -66,10 +102,10 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
               y={boxY}
               width={boxWidth}
               height={boxHeight}
-              rx={6}
+              rx={16}
             />
-            {block.labelPos !== 'top' && (
-              <text className="sc-block-label" x={boxX + boxWidth} y={boxY - 6}>
+            {!sideLabel && (
+              <text className="sc-block-label" x={boxX + boxWidth} y={boxY - 6} textAnchor="end">
                 {block.name || block.id}
               </text>
             )}
@@ -129,20 +165,29 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
               }}
             >
               <circle cx={seatX} cy={seatY} r={radius} />
-              {cell.label && (
-                <text x={seatX} y={seatY}>{cell.label}</text>
+              {isSelected && (
+                <polygon
+                  className="sc-seat-star"
+                  points={starPoints(
+                    seatX,
+                    seatY,
+                    radius * 0.92,
+                    radius * 0.92 * 0.5,
+                    starTipAngle(seatX, seatY, cx, cy, block.rotation || 0, venueCenter)
+                  )}
+                />
               )}
             </g>
           )
         })
       )}
       </g>
-      {topLabel && (
+      {sideLabel && (
         <text
           className="sc-block-label"
-          x={topLabel.x}
-          y={topLabel.y}
-          textAnchor="middle"
+          x={sideLabel.x}
+          y={sideLabel.y}
+          textAnchor={sideLabel.anchor}
         >
           {block.name || block.id}
         </text>
@@ -152,6 +197,7 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
 }
 
 export default function VenueMap({ venue, soldSeats, heldSeats, selected, onSelectSeat }) {
+  const venueCenter = { x: venue.width / 2, y: venue.height / 2 }
   return (
     <div className="sc-venue-wrap" style={{ '--venue-w': venue.width, '--venue-h': venue.height }}>
       <svg
@@ -173,6 +219,7 @@ export default function VenueMap({ venue, soldSeats, heldSeats, selected, onSele
             heldSeats={heldSeats}
             selected={selected}
             onSelectSeat={onSelectSeat}
+            venueCenter={venueCenter}
           />
         ))}
       </svg>

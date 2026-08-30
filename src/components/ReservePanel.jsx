@@ -2,7 +2,10 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink, holdSta
   if (!selected) {
     return (
       <div className="sc-panel">
-        <div className="sc-panel-empty">Pick a seat above, then reserve it on the ticket page.</div>
+        <div className="sc-panel-empty">
+          Pick a seat above, then reserve it on the ticket page.
+          <span className="sc-panel-scroll-hint"> Scroll the seat map to see more.</span>
+        </div>
       </div>
     )
   }
