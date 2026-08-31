@@ -32,7 +32,7 @@
      design: seat labels need to stay legible at a known size, not grow
      with the rest of the UI). Retune by changing the two anchor values
      here. */
-  font-size: clamp(16px, 20.655px - 0.517vw, 19px);
+  /* font-size: clamp(16px, 20.655px - 0.517vw, 19px); */
 }
 .seat-chart *,
 .seat-chart *::before,
@@ -49,14 +49,14 @@
     system-ui,
     -apple-system,
     sans-serif;
-  font-size: 0.6875em;
+  font-size: 1.275em;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--blue);
   margin: 0 0 6px;
 }
 .sc-title {
-  font-size: 1.25em;
+  font-size: 1.85em;
   letter-spacing: 0.04em;
   margin: 0 0 16px;
   color: var(--navy);
@@ -103,7 +103,7 @@
     system-ui,
     -apple-system,
     sans-serif;
-  font-size: 0.8125em;
+  font-size: 1em;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--navy);
@@ -124,7 +124,7 @@
     system-ui,
     -apple-system,
     sans-serif;
-  font-size: 0.75em;
+  font-size: 1em;
   font-weight: 600;
   color: var(--navy);
   margin-bottom: 16px;
@@ -141,6 +141,7 @@
 
 .sc-venue {
   /* height: auto; */
+  display: block;
   background: var(--venue-bg);
 }
 
@@ -177,7 +178,7 @@
    slice is currently visible. */
 @media (max-width: 480px) {
   .sc-venue {
-    height: 60vmax;
+    height: 70vmax;
   }
   .sc-panel-scroll-hint {
     display: inline;
@@ -221,7 +222,7 @@
 }
 .sc-table rect {
   fill: var(--bg);
-  stroke: var(--navy);
+  stroke: var(--blue);
   stroke-width: 2;
 }
 .sc-table .sc-podium {
@@ -328,7 +329,7 @@
     system-ui,
     -apple-system,
     sans-serif;
-  font-size: 0.6875em;
+  font-size: 1.2em;
   color: var(--ink-dim);
   flex-wrap: wrap;
 }
@@ -338,9 +339,9 @@
   gap: 6px;
 }
 .sc-legend-swatch {
-  width: 14px;
-  height: 12px;
-  border-radius: 3px;
+  width: 1em;
+  height: 1em;
+  border-radius: .5em;
   border: 1.5px solid var(--seat-open-border);
   background: var(--seat-open);
 }

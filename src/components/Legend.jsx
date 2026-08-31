@@ -13,8 +13,6 @@ export default function Legend() {
         </span>
         Selection
       </span>
-      <span className="sc-legend-item"><span className="sc-legend-swatch sold"></span>Sold</span>
-      <span className="sc-legend-item"><span className="sc-legend-swatch held"></span>Held</span>
       <span className="sc-legend-item"><span className="sc-legend-swatch actor"></span>Unavailable</span>
     </div>
   )
