@@ -85,8 +85,8 @@ function buildRows(seats, priceByType) {
         [
           '', // Product ID
           '', // Variant ID
-          'PHYSICAL',
-          '', // Product Page
+          'SERVICE',
+          CONFIG.squarespaceProductPage,
           seatProductSlug(show.sku, seat.code),
           `Convention — ${show.label} — Seat ${seat.label}`,
           `<p>Reserved seating for the ${show.label} performance — Seat ${seat.label} (${typeLabel}).</p>`,
@@ -105,10 +105,10 @@ function buildRows(seats, priceByType) {
           1,
           show.label,
           'Convention',
-          1,
-          0,
-          0,
-          0,
+          '', // Weight (physical-shipping only, not applicable to SERVICE)
+          '', // Length
+          '', // Width
+          '', // Height
           'Yes',
           '' // Hosted Image URLs
         ]

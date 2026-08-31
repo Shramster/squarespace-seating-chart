@@ -11,3 +11,13 @@ services:
       - ../dist:/dist
     ports:
       - "${PORT:-8100}:8000"
+
+  poller:
+    build: .
+    command: python manage.py poll_squarespace_orders
+    env_file:
+      - .env
+    volumes:
+      - .:/code
+    profiles:
+      - poller

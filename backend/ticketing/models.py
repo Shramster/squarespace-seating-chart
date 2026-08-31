@@ -52,20 +52,3 @@ class SeatSale(models.Model):
     def __str__(self):
         status = "voided" if self.voided_at else "sold"
         return f"{self.show.sku}: {self.seat_code} ({status})"
-
-
-class SeatHold(models.Model):
-    """Short-lived, soft reservation created when a buyer clicks "Reserve"
-    in the embed, so other browsers don't select the same seat while this
-    buyer is off completing checkout on Squarespace. Not an inventory
-    lock — Squarespace's own per-seat Stock: 1 is the actual backstop
-    against overselling if a hold expires mid-checkout. Expiry is lazy
-    (filtered on read/write), so no scheduled cleanup task is needed."""
-
-    show = models.ForeignKey(Show, related_name="seat_holds", on_delete=models.CASCADE)
-    seat_code = models.CharField(max_length=64)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-
-    def __str__(self):
-        return f"{self.show.sku}: {self.seat_code} (held until {self.expires_at})"

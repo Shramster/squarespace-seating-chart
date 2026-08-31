@@ -1,21 +1,17 @@
 import logging
-from datetime import timedelta
 
 from django.conf import settings
-from django.db import transaction
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import SeatHold, SeatSale, SeatSkuMap, Show
-from .serializers import SeatHoldSerializer, SeatStatusSerializer
+from .models import SeatSale, Show
+from .order_sync import sync_order
+from .serializers import SeatStatusSerializer
 from .webhook_auth import verify_squarespace_signature
 
 logger = logging.getLogger("ticketing")
-
-HOLD_TTL = timedelta(minutes=10)
 
 
 class SeatStatusView(APIView):
@@ -31,41 +27,8 @@ class SeatStatusView(APIView):
                 "seat_code", flat=True
             )
         )
-        held_seats = list(
-            SeatHold.objects.filter(show=show, expires_at__gt=timezone.now()).values_list(
-                "seat_code", flat=True
-            )
-        )
-        data = SeatStatusSerializer({"soldSeats": sold_seats, "heldSeats": held_seats}).data
+        data = SeatStatusSerializer({"soldSeats": sold_seats}).data
         return Response(data)
-
-
-class SeatHoldView(APIView):
-    """Creates a short-lived soft hold on a seat when a buyer clicks
-    Reserve, so other browsers see it as unavailable while this buyer is
-    off completing checkout on Squarespace. This is a UX nicety, not an
-    inventory lock — Squarespace's own per-seat Stock: 1 is what actually
-    prevents overselling if a hold expires mid-checkout."""
-
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, sku, code):
-        show = get_object_or_404(Show, sku=sku)
-        now = timezone.now()
-
-        with transaction.atomic():
-            SeatHold.objects.filter(show=show, seat_code=code, expires_at__lte=now).delete()
-
-            if SeatSale.objects.filter(show=show, seat_code=code, voided_at__isnull=True).exists():
-                return Response({"detail": "Seat already sold."}, status=status.HTTP_409_CONFLICT)
-
-            if SeatHold.objects.select_for_update().filter(show=show, seat_code=code).exists():
-                return Response({"detail": "Seat already held."}, status=status.HTTP_409_CONFLICT)
-
-            hold = SeatHold.objects.create(show=show, seat_code=code, expires_at=now + HOLD_TTL)
-
-        data = SeatHoldSerializer({"seatCode": hold.seat_code, "expiresAt": hold.expires_at}).data
-        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class SquarespaceOrderWebhookView(APIView):
@@ -88,42 +51,12 @@ class SquarespaceOrderWebhookView(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         payload = request.data
-        topic = payload.get("topic", "")
         order = payload.get("data", {})
-        order_id = order.get("id") or order.get("orderId")
 
-        if not order_id:
+        if not (order.get("id") or order.get("orderId")):
             logger.warning("Webhook payload missing order id: %s", payload)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        is_cancellation = topic in ("order.update",) and order.get("fulfillmentStatus") == "CANCELED"
-
-        for line_item in order.get("lineItems", []):
-            line_item_id = line_item.get("id") or line_item.get("lineItemId")
-            sku = line_item.get("sku") or line_item.get("variantId")
-            if not line_item_id or not sku:
-                continue
-
-            seat_map = SeatSkuMap.objects.filter(squarespace_sku=sku).select_related("show").first()
-            if not seat_map:
-                logger.warning("No SeatSkuMap entry for SKU %s (order %s)", sku, order_id)
-                continue
-
-            if is_cancellation:
-                SeatSale.objects.filter(
-                    squarespace_order_id=order_id,
-                    squarespace_line_item_id=line_item_id,
-                ).update(voided_at=timezone.now())
-                continue
-
-            SeatSale.objects.get_or_create(
-                squarespace_order_id=order_id,
-                squarespace_line_item_id=line_item_id,
-                defaults={
-                    "show": seat_map.show,
-                    "seat_code": seat_map.seat_code,
-                },
-            )
-            SeatHold.objects.filter(show=seat_map.show, seat_code=seat_map.seat_code).delete()
+        sync_order(order)
 
         return Response(status=status.HTTP_200_OK)

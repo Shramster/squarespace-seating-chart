@@ -3,14 +3,12 @@ import hmac
 import json
 import os
 import tempfile
-from datetime import timedelta
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-from django.utils import timezone
 from rest_framework.test import APIClient
 
-from .models import SeatHold, SeatSale, SeatSkuMap, Show
+from .models import SeatSale, SeatSkuMap, Show
 
 TEST_SECRET_HEX = "deadbeef" * 8  # 32 bytes, hex-encoded
 
@@ -41,7 +39,7 @@ class TicketingTests(TestCase):
     def test_seats_endpoint_starts_empty(self):
         res = self.client.get(self.seats_url)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
+        self.assertEqual(res.json(), {"soldSeats": []})
 
     def test_webhook_marks_seat_sold(self):
         SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
@@ -56,7 +54,7 @@ class TicketingTests(TestCase):
         self.assertEqual(res.status_code, 200)
 
         res = self.client.get(self.seats_url)
-        self.assertEqual(res.json(), {"soldSeats": ["L-2-3"], "heldSeats": []})
+        self.assertEqual(res.json(), {"soldSeats": ["L-2-3"]})
 
     def test_webhook_is_idempotent_on_duplicate_line_item(self):
         SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
@@ -107,50 +105,19 @@ class TicketingTests(TestCase):
         self.post_webhook(cancel_payload)
 
         res = self.client.get(self.seats_url)
-        self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
+        self.assertEqual(res.json(), {"soldSeats": []})
 
-
-class SeatHoldTests(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.show = Show.objects.create(sku="SEPT12", label="Sat, Sept 12")
-        self.seats_url = f"/api/shows/{self.show.sku}/seats/"
-        self.hold_url = f"/api/shows/{self.show.sku}/seats/L-2-3/hold/"
-
-    def test_hold_creates_and_shows_up_in_seats_endpoint(self):
-        res = self.client.post(self.hold_url)
-        self.assertEqual(res.status_code, 201)
-        self.assertEqual(res.json()["seatCode"], "L-2-3")
+    def test_mark_seats_sold_command_bypasses_squarespace(self):
+        call_command("mark_seats_sold", self.show.sku, "L-2-3", "L-2-4")
 
         res = self.client.get(self.seats_url)
-        self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": ["L-2-3"]})
+        self.assertCountEqual(res.json()["soldSeats"], ["L-2-3", "L-2-4"])
 
-    def test_holding_an_already_held_seat_conflicts(self):
-        self.client.post(self.hold_url)
-        res = self.client.post(self.hold_url)
-        self.assertEqual(res.status_code, 409)
+    def test_mark_seats_sold_is_idempotent(self):
+        call_command("mark_seats_sold", self.show.sku, "L-2-3")
+        call_command("mark_seats_sold", self.show.sku, "L-2-3")
 
-    def test_holding_an_already_sold_seat_conflicts(self):
-        SeatSale.objects.create(
-            show=self.show,
-            seat_code="L-2-3",
-            squarespace_order_id="order-1",
-            squarespace_line_item_id="li-1",
-        )
-        res = self.client.post(self.hold_url)
-        self.assertEqual(res.status_code, 409)
-
-    def test_expired_hold_frees_the_seat(self):
-        hold = SeatHold.objects.create(
-            show=self.show, seat_code="L-2-3", expires_at=timezone.now() - timedelta(minutes=1)
-        )
-
-        res = self.client.get(self.seats_url)
-        self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
-
-        res = self.client.post(self.hold_url)
-        self.assertEqual(res.status_code, 201)
-        self.assertFalse(SeatHold.objects.filter(pk=hold.pk).exists())
+        self.assertEqual(SeatSale.objects.filter(seat_code="L-2-3").count(), 1)
 
 
 class ImportSquarespaceCsvTests(TestCase):

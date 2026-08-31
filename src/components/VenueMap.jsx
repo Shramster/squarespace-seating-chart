@@ -37,7 +37,7 @@ function starTipAngle(seatX, seatY, cx, cy, rotationDeg, venueCenter) {
   return screenAngle - (rotationDeg * Math.PI) / 180
 }
 
-function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat, venueCenter }) {
+function SeatBlock({ block, soldSeats, selected, onSelectSeat, venueCenter }) {
   const pitch = block.cellSize + block.gap
   const cols = Math.max(...block.grid.map((row) => row.length))
   const width = cols * pitch - block.gap
@@ -118,8 +118,7 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat, venueC
           const code = seatCode(block.id, r, c)
           const isSelected = selected === code
           const sold = soldSeats.includes(code)
-          const held = !isSelected && heldSeats.includes(code)
-          const disabled = sold || held || cell.type === 'actor'
+          const disabled = sold || cell.type === 'actor'
           const seatX = block.x + c * pitch + block.cellSize / 2
           const seatY = block.y + r * pitch + block.cellSize / 2
           const radius = block.cellSize / 2
@@ -128,7 +127,6 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat, venueC
             'sc-seat',
             `sc-${cell.type}`,
             sold && 'sc-sold',
-            held && 'sc-held',
             isSelected && 'sc-selected'
           ]
             .filter(Boolean)
@@ -139,9 +137,7 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat, venueC
               ? 'reserved for cast'
               : sold
                 ? 'sold'
-                : held
-                  ? 'reserved by another buyer'
-                  : 'available'
+                : 'available'
 
           function activate() {
             if (disabled) return
@@ -196,7 +192,7 @@ function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat, venueC
   )
 }
 
-export default function VenueMap({ venue, soldSeats, heldSeats, selected, onSelectSeat }) {
+export default function VenueMap({ venue, soldSeats, selected, onSelectSeat }) {
   const venueCenter = { x: venue.width / 2, y: venue.height / 2 }
   return (
     <div className="sc-venue-wrap" style={{ '--venue-w': venue.width, '--venue-h': venue.height }}>
@@ -216,7 +212,6 @@ export default function VenueMap({ venue, soldSeats, heldSeats, selected, onSele
             key={block.id}
             block={block}
             soldSeats={soldSeats}
-            heldSeats={heldSeats}
             selected={selected}
             onSelectSeat={onSelectSeat}
             venueCenter={venueCenter}

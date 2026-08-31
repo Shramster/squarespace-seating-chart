@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react'
  */
 export function useSeatStatus(apiBase, sku) {
   const [soldSeats, setSoldSeats] = useState([])
-  const [heldSeats, setHeldSeats] = useState([])
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'error'
 
   useEffect(() => {
@@ -21,13 +20,11 @@ export function useSeatStatus(apiBase, sku) {
       .then((data) => {
         if (cancelled) return
         setSoldSeats(data.soldSeats || [])
-        setHeldSeats(data.heldSeats || [])
         setStatus('ready')
       })
       .catch(() => {
         if (cancelled) return
         setSoldSeats([])
-        setHeldSeats([])
         setStatus('error')
       })
 
@@ -36,5 +33,5 @@ export function useSeatStatus(apiBase, sku) {
     }
   }, [apiBase, sku])
 
-  return { soldSeats, heldSeats, status }
+  return { soldSeats, status }
 }

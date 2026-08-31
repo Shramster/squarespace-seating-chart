@@ -15,7 +15,7 @@ there's only one embed, one page.
 
 ## 2. Seat → purchase workflow
 
-Every sellable seat (`ga`/`delegate`) is its **own Squarespace product**,
+Every sellable seat (`ga`/`delegate` / `chairperson`) is its **own Squarespace product**,
 not a variant of a per-show product. Squarespace has no native way to
 deep-link into a preselected variant (confirmed against Squarespace's own
 forums/dev docs — unlike Shopify's `?variant=` parameter), so the only way
@@ -77,22 +77,91 @@ import feature and point it at `product_import-shows.csv`. Each row becomes
 its own product (not a variant), landing in the category named after its
 show day.
 
+Before importing into a real site (not the sandbox site the generator's
+defaults were validated against), check `CONFIG.squarespaceProductPage`
+in `src/config.js` matches that site's actual Store page slug — Squarespace
+needs an existing page to place products under, and a blank/wrong value
+fails the *whole* bulk import with "Product page not found," not just the
+affected rows.
+
 Sanity-check after import:
 - Spot-check that a seat's product page URL matches `seatBuyLink()`'s
-  output for that show/seat (e.g. `.../convention-oct03-back1-1`).
+  output for that show/seat (e.g. `.../tickets/p/convention-oct03-back1-1`,
+  where `tickets` is whatever `CONFIG.squarespaceProductPage` is set to).
 - Confirm `Stock` shows as `1` on a couple of products.
+- A "Categories not assigned" warning on every imported row is common and
+  non-fatal — Squarespace doesn't reliably auto-create a *new* category
+  from the CSV for `SERVICE`-type products. It only affects Squarespace's
+  own category browsing pages, not this app; create the category by hand
+  in the admin first and re-import if you want it fixed.
 
-## 5. Registering & testing the order webhook
+## 5. Syncing orders into Django: polling (live path) vs. webhook (unused)
 
-**Registration** (admin → Settings → Advanced → Webhooks in the test
-site): needs a **public HTTPS URL** — the local dev backend
-(`http://127.0.0.1:8100`) isn't reachable from Squarespace's servers, so
-tunnel it first (e.g. `ngrok http 8100`) and register the tunnel's
-`https://.../api/webhooks/squarespace/orders/` URL, subscribed to
-`order.create` and `order.update`. Squarespace shows a signing secret at
-registration time — set it as `SQUARESPACE_WEBHOOK_SECRET` in
-`backend/.env` (must match exactly; it's required with no default and the
-app fails loudly if unset).
+Push webhooks were the original plan (`POST
+/api/webhooks/squarespace/orders/`, HMAC-verified against
+`SQUARESPACE_WEBHOOK_SECRET`), but **Squarespace's Webhook Subscriptions
+API is OAuth-only** — a plain site-level Commerce API key (Settings →
+Advanced → API Keys) cannot create a subscription no matter what
+permissions you give it; you'd need to register a Developer Platform
+OAuth app and complete its authorization flow first. Nobody's done that,
+so the webhook endpoint is currently dead code. **The live mechanism is
+the order poller** — read that subsection first; the webhook one below is
+kept for whoever eventually does the OAuth work.
+
+### Polling (`manage.py poll_squarespace_orders`)
+
+Uses a plain read-only Commerce API key instead of OAuth. In the
+Squarespace admin: Settings → Advanced → API Keys → generate a key with
+at least **Orders: Read Only** (Inventory/Products/Transactions Read Only
+don't hurt but aren't required). Put it in `backend/.env`:
+
+```
+SQUARESPACE_API_KEY=<the key>
+```
+
+Run it once to confirm it works:
+```
+docker compose exec web python manage.py poll_squarespace_orders --once --lookback-hours 48
+```
+then confirm the seat(s) from any orders in that window show up via
+`GET /api/shows/<sku>/seats/` and as `SeatSale` rows in the admin.
+
+For continuous syncing, start it as a long-running service — it's gated
+behind the `poller` Compose profile so it doesn't start for everyone
+running `make dev`:
+```
+docker compose --profile poller up -d poller
+```
+It polls every 60s by default (`--interval`) and re-scans a rolling
+24-hour window each time (`--lookback-hours`) rather than tracking a
+cursor between runs — `sync_order()` is idempotent (unique on Squarespace
+order + line-item id), so re-scanning is simpler than persisting poll
+state and stays correct across restarts. **Caveat**: if the poller is
+down for longer than the lookback window, orders in the gap are missed —
+there's still no reconciliation path for that; see BACKLOG.md.
+
+**Gotcha hit in practice**: the poller and `web` share the same SQLite
+DB file, but not automatically the same *catalog* — `SeatSkuMap` rows
+only update when someone runs `import_squarespace_csv` by hand (see §4).
+After a venue/seat-code redesign, a deployment's `SeatSkuMap` can keep
+pointing at old seat codes indefinitely; the poller will find real orders
+but log "No SeatSkuMap entry for SKU ..." and silently skip them instead
+of erroring loudly. If synced sales aren't showing up, check this first —
+`docker compose exec web python manage.py shell -c "from ticketing.models
+import SeatSkuMap; print(list(SeatSkuMap.objects.values_list('squarespace_sku',
+flat=True)))"` against what's actually live on Squarespace.
+
+### Webhook (OAuth-only, not currently usable)
+
+**Registration**, once someone's registered a Developer Platform OAuth
+app and can present an OAuth access token: `POST
+https://api.squarespace.com/1.0/webhook_subscriptions` with body
+`{"endpointUrl": "https://.../api/webhooks/squarespace/orders/", "topics":
+["order.create", "order.update"]}` — needs a **public HTTPS URL** (tunnel
+a local dev backend with e.g. `ngrok http 8100` first). The response's
+`secret` field is shown only once — set it as `SQUARESPACE_WEBHOOK_SECRET`
+in `backend/.env` (required with no default; the app fails loudly if
+unset).
 
 **Faking a webhook call locally**, without a tunnel or a real order —
 useful for iterating on webhook logic in isolation. Uses the same
@@ -296,26 +365,71 @@ curl -sI https://seatchart.swseng.io/static/seat-chart.js | head -1   # should b
 
 **7g. Import the demo catalog and confirm:**
 ```
-docker compose exec web python manage.py import_squarespace_csv test_data/product_import-shows.csv
+docker compose exec web python manage.py import_squarespace_csv test_data/product_import-test-subset.csv
 curl -s https://seatchart.swseng.io/api/shows/TEST01/seats/
 curl -sI https://seatchart.swseng.io/static/seat-chart.js | head -1
 ```
+Use `product_import-test-subset.csv` (10 seats, `$0`) for a demo/test
+pass on a real site, not the full `product_import-shows.csv` (99 seats
+at real tier pricing) — see §3. **Re-run this import after any venue/seat
+code change** — Django's `SeatSkuMap` doesn't update itself when
+`config.js` or the CSV changes, and a stale mapping fails silently (the
+poller/webhook just logs "No SeatSkuMap entry" and skips the order,
+rather than erroring) rather than loudly.
 
-**7h. Squarespace side** (on `https://flute-swan-yncx.squarespace.com/`):
-create the demo page with a Code Block:
+Redeploying the frontend bundle (`scp` a rebuilt `dist/` + rerun this
+step) needs one more thing whitenoise-side: `collectstatic` builds its
+served-file index once per process, so
+`docker compose exec web python manage.py collectstatic --noinput`
+alone won't make a *running* container serve the new files — follow it
+with `docker compose restart web` (confirm with `curl -s
+https://seatchart.swseng.io/static/seat-chart.js | grep <something from
+the new build>`, not just the response headers, since `Last-Modified`
+can look unchanged too). Also: any `docker compose up`/`restart` of
+`web` **must** include `-f docker-compose.production.yml` — running
+plain `docker compose up -d web` (base file only) silently drops it back
+onto the default Compose network and away from `backend_default`/the
+`seatchart_web` alias, which nginx needs to reach it (symptom: `502 Bad
+Gateway` from `seatchart.swseng.io`, `docker inspect` on the container
+shows the wrong network).
+
+**7h. Squarespace side.** This has been run against the *real* production
+site (`https://www.conventionplay.com/`, an existing store the team
+didn't build from scratch — not a separate sandbox/test site), on a
+password-protected page at `/seating-chart` with a Code Block:
 ```html
 <div id="seat-chart-root"></div>
 <link rel="stylesheet" href="https://seatchart.swseng.io/static/seat-chart.css">
 <script src="https://seatchart.swseng.io/static/seat-chart.js"></script>
 ```
-Bulk-import `backend/test_data/product_import-shows.csv` per §4 above,
-then password-protect the page (Squarespace page settings → password).
+Before bulk-importing, confirm `CONFIG.squarespaceProductPage` in
+`src/config.js` matches the slug of that site's actual Store page (this
+site's is `tickets`) — an empty/wrong value fails the *entire* bulk
+import with "Product page not found," not just the affected rows.
+Bulk-import `backend/test_data/product_import-test-subset.csv` per §4
+above; expect a non-fatal "Categories not assigned" warning on every row
+if the category doesn't already exist on the site (harmless — only
+affects Squarespace's own browsing/category pages, not this app; create
+the category first and re-import if you want it fixed). Confirm
+Product Type imported as `SERVICE` (not `PHYSICAL`) and that `Stock: 1`
+still blocks a second sale of a `SERVICE` product the same way it does
+for `PHYSICAL` (confirmed working in practice).
 
-**7i. Register the webhook and test end-to-end** per §5–§6 above, using
-`https://seatchart.swseng.io/api/webhooks/squarespace/orders/` as
-the registered URL. Update `SQUARESPACE_WEBHOOK_SECRET` in
-`~/seatchart/backend/.env` with the real value Squarespace shows
-at registration, then `docker compose restart web`.
+**7i. Sync orders and test end-to-end.** Push webhooks aren't usable here
+— see §5 for why (Webhook Subscriptions API is OAuth-only; a plain site
+API key can't register one). Instead:
+1. Generate a Commerce API key on the live site (Settings → Advanced →
+   API Keys, **Orders: Read Only** is enough) and set it as
+   `SQUARESPACE_API_KEY` in `~/seatchart/backend/.env`.
+2. `docker compose --profile poller up -d poller` (needs the code from
+   `backend/ticketing/management/commands/poll_squarespace_orders.py` —
+   `scp` it over plus `order_sync.py`, `views.py`, `requirements.txt`
+   (adds `requests`), `docker-compose.yml` if the VPS checkout predates
+   this, then `docker compose build web poller` before starting it).
+3. Test end-to-end per §6, using `docker compose logs poller` and
+   `GET /api/shows/TEST01/seats/` in place of watching for a webhook
+   delivery — expect up to `--interval` seconds (60s default) of lag
+   between a real purchase and the seat flipping to `sold`.
 
 **Git note:** the `nginx.conf` change to `swseng_mono` (`staging`
 branch) needs to be committed and pushed from a machine with write

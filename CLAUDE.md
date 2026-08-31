@@ -44,7 +44,9 @@ local venv — there isn't one set up for this repo.
   `index.html` locally. If the element isn't found, mounting silently
   no-ops (logs an error) rather than throwing.
 - `src/config.js` is the single source of *display* data: API base URL,
-  `squarespaceBase` (the Squarespace site domain), the list of shows
+  `squarespaceBase` (the Squarespace site domain) and
+  `squarespaceProductPage` (the slug of that site's existing Store page —
+  both feed `seatBuyLink()`, see below), the list of shows
   (`sku` + `label` per performance day — each seat's buy link is computed,
   not stored per show; see below), and `CONFIG.venue` — the real room
   modeled as discrete seating `blocks` (each
@@ -98,8 +100,12 @@ local venv — there isn't one set up for this repo.
   `POST`s `{apiBase}/api/shows/{sku}/seats/{code}/hold/` to create a
   short-lived hold (see backend section below), then opens
   `seatBuyLink(showSku, seatCode)` (`config.js`) in a new tab — a
-  permalink straight to that seat's own Squarespace product, computed from
-  `squarespaceBase` + `seatProductSlug()`. Every seat is its own
+  permalink straight to that seat's own Squarespace product, computed as
+  `squarespaceBase` + `squarespaceProductPage` + `/p/` + `seatProductSlug()`
+  (the `/p/` segment matches how this Squarespace site's Store page
+  actually renders individual product URLs — confirm this against your
+  own site's product URL shape before reusing this pattern elsewhere).
+  Every seat is its own
   Squarespace product (not a variant of a per-show product), so there's no
   dropdown for the buyer to hunt through; see `RUNBOOK.md` for the
   catalog/CSV shape this depends on. A 409 from the hold endpoint (already
@@ -128,8 +134,9 @@ display.
   - `SeatSale` — records a completed sale: `show`, `seat_code`,
     `squarespace_order_id`, `squarespace_line_item_id`, `sold_at`,
     `voided_at` (set on refund/cancellation). Unique on
-    `(squarespace_order_id, squarespace_line_item_id)` for webhook
-    idempotency, plus a partial unique constraint on `(show, seat_code)`
+    `(squarespace_order_id, squarespace_line_item_id)` so both the webhook
+    and the order poller (see below) can upsert idempotently, plus a
+    partial unique constraint on `(show, seat_code)`
     scoped to `voided_at IS NULL` — a seat can only be actively sold
     once, but can be resold after a void.
   - `SeatHold` — a short-lived (10 min TTL) soft reservation created
@@ -152,15 +159,40 @@ display.
     `order.create`/`order.update` notifications from Squarespace.
     Verifies the `Squarespace-Signature` header via HMAC-SHA256 against
     `SQUARESPACE_WEBHOOK_SECRET` (`backend/ticketing/webhook_auth.py`;
-    missing/invalid signature → `403`). Maps each line item's SKU to a
-    seat via `SeatSkuMap`, unknown SKUs are logged and skipped without
-    failing the request. On a normal order, upserts a `SeatSale`
-    (idempotent on order/line-item id) and clears any matching
-    `SeatHold`. On a cancellation (`order.update` +
-    `fulfillmentStatus == "CANCELED"`), voids the matching `SeatSale`
-    instead. Squarespace's admin webhook-registration steps and the
-    lack of a reconciliation path for missed deliveries aren't
-    documented anywhere yet — see BACKLOG.md.
+    missing/invalid signature → `403`), then hands the order payload to
+    `sync_order()` (see below). **Currently unused in practice**:
+    Squarespace's Webhook Subscriptions API is OAuth-only — a plain
+    site-level Commerce API key (Settings → Advanced → API Keys) cannot
+    create a subscription, regardless of the permissions selected on it.
+    Standing up real push webhooks means registering a Developer Platform
+    OAuth app and completing its authorization flow first; nobody has
+    done that yet, so this endpoint is dead code until someone does. The
+    live path today is the poller below.
+  - **Order sync — `backend/ticketing/order_sync.py`'s `sync_order(order)`**:
+    shared by the webhook view above and the poller. Takes one Squarespace
+    order dict (`{id, fulfillmentStatus, lineItems: [{id, sku}]}`), maps
+    each line item's SKU to a seat via `SeatSkuMap` (unknown SKUs are
+    logged and skipped, not fatal), and either upserts a `SeatSale`
+    (idempotent on order/line-item id) and clears the matching `SeatHold`,
+    or — if `fulfillmentStatus == "CANCELED"` — voids the matching
+    `SeatSale` instead.
+  - **`manage.py poll_squarespace_orders`** (`backend/ticketing/management/commands/poll_squarespace_orders.py`):
+    the actual live order-sync mechanism, since webhooks aren't wired up
+    (see above). Polls `GET https://api.squarespace.com/1.0/commerce/orders`
+    with a plain `SQUARESPACE_API_KEY` (Orders: Read Only is enough) as a
+    Bearer token, and calls `sync_order()` on each result. Re-scans a
+    rolling `--lookback-hours` window (default 24) every poll rather than
+    tracking a cursor between runs — `sync_order()` is idempotent, so
+    this is simpler than persisting poll state and safe across restarts.
+    Loops forever on `--interval` seconds (default 60) unless `--once` is
+    passed. Runs as the `poller` service in `docker-compose.yml`, gated
+    behind the `poller` Compose profile (`docker compose --profile poller
+    up -d poller`) so it doesn't start for everyone running `make dev` —
+    most local dev doesn't have `SQUARESPACE_API_KEY` set, and the poller
+    hits the real live Squarespace site (there's no separate sandbox/test
+    site), so only start it when that's actually intended. There's still
+    no reconciliation path if the poller itself is down for a stretch
+    longer than `--lookback-hours` — see BACKLOG.md.
 - **Catalog import — `backend/ticketing/management/commands/import_squarespace_csv.py`**:
   `manage.py import_squarespace_csv <csv_path>`. Reads a Squarespace
   product-import CSV's `SKU` column, expecting the format
@@ -177,21 +209,37 @@ display.
   (`ga`/`delegate` only; `actor` seats are excluded, never sold), not a
   variant, so every seat gets its own real Squarespace product page/
   permalink (see `seatProductSlug()`/`seatBuyLink()` in `config.js`).
-  Each row's `Product URL` is `seatProductSlug(show.sku, seat.code)` and
-  `Categories` is the show's `label`, so Squarespace groups all of a day's
-  seats under one category page. SKU is `<show.sku>-<seat.code>`, matching
-  what `import_squarespace_csv` expects (it only reads the `SKU` column —
-  the per-seat-product vs. per-show-with-variants shape is invisible to
-  Django). **`Stock` is hardcoded to `1` per product** — this is what
-  makes Squarespace itself refuse a second sale of an already-sold seat,
-  independent of anything this app does. Price is `$25` for `ga` / `$45`
-  for `delegate` (`GA_PRICE`/`DELEGATE_PRICE` constants). The Django
-  import command reads this *same* CSV directly — no separate JSON seed
-  format, so the two systems can't drift apart. See `RUNBOOK.md` for the
-  full generate → import → test workflow.
+  Each row's `Product URL` is `seatProductSlug(show.sku, seat.code)`,
+  `Product Page` is `CONFIG.squarespaceProductPage` (must match an
+  existing Store page's slug on the target site — an empty/wrong value
+  here fails the whole bulk import with "Product page not found"), and
+  `Categories` is the show's `label`, so Squarespace groups all of a
+  day's seats under one category page (bulk-importing a *new* category
+  value for a `SERVICE` product doesn't reliably auto-create/assign it —
+  create the category in the admin first if you need it, then re-import).
+  `Product Type` is `SERVICE`, not `PHYSICAL` — these are ticket/seat
+  reservations, not shippable goods — so the shipping fields
+  (Weight/Length/Width/Height) are left blank rather than populated.
+  SKU is `<show.sku>-<seat.code>`, matching what `import_squarespace_csv`
+  expects (it only reads the `SKU` column — the per-seat-product vs.
+  per-show-with-variants shape is invisible to Django). **`Stock` is
+  hardcoded to `1` per product** — confirmed to still block a second sale
+  of an already-sold `SERVICE` product, same as it does for `PHYSICAL`.
+  Price is per-tier from `CONFIG.pricesByType`. The Django import command
+  reads this *same* CSV directly — no separate JSON seed format, so the
+  two systems can't drift apart, but Django's own `SeatSkuMap` rows don't
+  update themselves when the CSV changes — re-run `import_squarespace_csv`
+  by hand after any catalog/venue change, or Django's seat codes silently
+  go stale against what's actually live on Squarespace (bit us once: seat
+  codes changed in a venue redesign, and a previously-imported deployment
+  kept the old pre-redesign codes until manually re-imported). See
+  `RUNBOOK.md` for the full generate → import → test workflow.
 - **Settings** (`backend/ticketing_dev/settings.py`): `SECRET_KEY` and
   `SQUARESPACE_WEBHOOK_SECRET` are required env vars with no default (by
   design — fails loudly rather than signing with a predictable value).
+  `SQUARESPACE_API_KEY` is read directly via `decouple.config()` inside
+  `poll_squarespace_orders` (not a global Django setting) so only running
+  the poller requires it — other commands/services work fine without it.
   `CORS_ALLOWED_ORIGINS` (env var, default `http://127.0.0.1:3000`) must
   include whatever origin the frontend dev server runs on. `DEBUG = True`
   is hardcoded — this is dev-only config, not hardened for production.

@@ -9,7 +9,6 @@
   --seat-open: var(--bg);
   --seat-open-border: rgba(17, 54, 134, 1);
   --venue-bg: #cfe6fb;
-  --held: #d69e2e;
   --seat-delegate: #3ea6f0;
   --seat-delegate-border: #1c7dc4;
   --seat-chair: #11316f;
@@ -301,14 +300,6 @@
   cursor: not-allowed;
 }
 
-.sc-seat.sc-held circle {
-  fill: var(--seat-unavailable);
-  stroke: var(--held);
-  stroke-width: 2;
-  opacity: 0.85;
-  cursor: not-allowed;
-}
-
 .sc-seat.sc-actor circle {
   fill: var(--seat-unavailable);
   stroke: var(--seat-unavailable);
@@ -367,10 +358,6 @@
   border-color: var(--seat-unavailable);
   opacity: 0.5;
 }
-.sc-legend-swatch.held {
-  background: var(--seat-unavailable);
-  border-color: var(--held);
-}
 .sc-legend-swatch.delegate {
   background: var(--seat-delegate);
   border-color: var(--seat-delegate-border);
@@ -425,12 +412,6 @@
   color: var(--ink-dim);
   font-size: 0.6875em;
   letter-spacing: 0.03em;
-}
-.sc-panel-error {
-  color: #b7231d;
-  font-size: 0.75em;
-  font-weight: 700;
-  flex-basis: 100%;
 }
 .sc-reserve-btn {
   font-family:

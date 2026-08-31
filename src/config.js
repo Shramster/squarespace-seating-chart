@@ -29,7 +29,7 @@ export function seatProductSlug(showSku, seatCode) {
 }
 
 export function seatBuyLink(showSku, seatCode) {
-  return `${CONFIG.squarespaceBase}/${seatProductSlug(showSku, seatCode)}`
+  return `${CONFIG.squarespaceBase}/${CONFIG.squarespaceProductPage}/p/${seatProductSlug(showSku, seatCode)}`
 }
 
 export const CONFIG = {
@@ -55,7 +55,14 @@ export const CONFIG = {
 
   // Your Squarespace site's domain, no trailing slash. Per-seat buy links
   // are computed from this + seatProductSlug() above.
-  squarespaceBase: 'https://flute-swan-yncx.squarespace.com',
+  squarespaceBase: 'https://www.conventionplay.com',
+
+  // Slug of the existing Squarespace Store page products should be
+  // imported under (the CSV's `Product Page` column) — this site's store
+  // lives at /tickets, so new seat products land at
+  // /tickets/p/<seatProductSlug()> instead of failing bulk import with
+  // "Product page not found."
+  squarespaceProductPage: 'tickets',
 
   // One entry per performance day. sku must match a Show.sku_prefix in
   // Django.
