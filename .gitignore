@@ -7,3 +7,17 @@ backend/db.sqlite3
 backend/**/__pycache__/
 backend/.env
 backend/staticfiles/
+
+# Pre-launch planning notes / real (non-demo) catalog data — not meant
+# to be public before the show goes live.
+claudenext.md
+seatcartadj.md
+OCT03-catalog-guide.md
+SeatChart8222026.png
+product_import-OCT03-full-catalog.csv
+
+# Local dev fixture scraped from the real production page (password-
+# protected) — a snapshot of Squarespace's own template markup, not
+# something other contributors need.
+/dev/production-page-source.html
+/production-preview.html
