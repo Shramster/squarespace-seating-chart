@@ -28,16 +28,14 @@ function starPoints(cx, cy, outerR, innerR, tipAngle = -Math.PI / 2) {
 }
 
 // Local (pre-rotation) tip angle for a seat's star so that, once the
-// block's own rotate(...) transform is applied, the tip points at
-// `venueCenter` on screen — i.e. toward the stage/action every block
-// surrounds, regardless of that block's own rotation.
-function starTipAngle(seatX, seatY, cx, cy, rotationDeg, venueCenter) {
-  const screenSeat = rotatePoint(seatX, seatY, cx, cy, rotationDeg)
-  const screenAngle = Math.atan2(venueCenter.y - screenSeat.y, venueCenter.x - screenSeat.x)
-  return screenAngle - (rotationDeg * Math.PI) / 180
+// block's own rotate(...) transform is applied, the star renders point-up
+// on screen — matching the logo's fixed, always-upright star — regardless
+// of that block's own rotation.
+function starTipAngle(rotationDeg) {
+  return -Math.PI / 2 - (rotationDeg * Math.PI) / 180
 }
 
-function SeatBlock({ block, soldSeats, selected, onSelectSeat, venueCenter }) {
+function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
   const pitch = block.cellSize + block.gap
   const cols = Math.max(...block.grid.map((row) => row.length))
   const width = cols * pitch - block.gap
@@ -169,7 +167,7 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat, venueCenter }) {
                     seatY,
                     radius * 0.92,
                     radius * 0.92 * 0.5,
-                    starTipAngle(seatX, seatY, cx, cy, block.rotation || 0, venueCenter)
+                    starTipAngle(block.rotation || 0)
                   )}
                 />
               )}
@@ -193,7 +191,6 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat, venueCenter }) {
 }
 
 export default function VenueMap({ venue, soldSeats, selected, onSelectSeat }) {
-  const venueCenter = { x: venue.width / 2, y: venue.height / 2 }
   return (
     <div className="sc-venue-wrap" style={{ '--venue-w': venue.width, '--venue-h': venue.height }}>
       <svg
@@ -214,7 +211,6 @@ export default function VenueMap({ venue, soldSeats, selected, onSelectSeat }) {
             soldSeats={soldSeats}
             selected={selected}
             onSelectSeat={onSelectSeat}
-            venueCenter={venueCenter}
           />
         ))}
       </svg>

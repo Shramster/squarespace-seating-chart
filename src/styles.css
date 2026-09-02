@@ -10,10 +10,9 @@
   --seat-open-border: rgba(17, 54, 134, 1);
   --venue-bg: #cfe6fb;
   --seat-delegate: #3ea6f0;
-  --seat-delegate-border: #1c7dc4;
   --seat-chair: #11316f;
   --seat-candidate: #0d0d0d;
-  --seat-unavailable: #c7ccd4;
+  --seat-unavailable: #8b95a3;
   --furniture-fill: #14171a;
   --star: #22d3ee;
 
@@ -190,7 +189,8 @@
   stroke-width: 4;
 }
 
-.sc-furniture rect {
+.sc-furniture rect,
+.sc-furniture path {
   fill: var(--furniture-fill);
   stroke: none;
 }
@@ -267,7 +267,7 @@
 }
 
 .sc-seat.sc-delegate circle {
-  stroke: var(--seat-delegate-border);
+  stroke: var(--seat-delegate);
   fill: var(--seat-delegate);
 }
 
@@ -296,7 +296,6 @@
 .sc-seat.sc-sold circle {
   fill: var(--seat-unavailable);
   stroke: var(--seat-unavailable);
-  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -351,7 +350,6 @@
   stroke: var(--navy);
   stroke-width: 0.75;
   stroke-linejoin: round;
-  rotate: 90deg;
 }
 .sc-legend-swatch.sold {
   background: var(--seat-unavailable);
@@ -360,7 +358,7 @@
 }
 .sc-legend-swatch.delegate {
   background: var(--seat-delegate);
-  border-color: var(--seat-delegate-border);
+  border-color: var(--seat-delegate);
 }
 .sc-legend-swatch.chair {
   background: var(--seat-chair);

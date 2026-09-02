@@ -91,7 +91,7 @@ export const CONFIG = {
 
     furniture: [
       { type: 'piano', x: 780, y: 213.5, w: 100, h: 150, label: 'Grand Piano' },
-      { type: 'table', x: 400, y: 173.5, w: 70, h: 130, label: 'Lectern', podium: { w: 30, h: 30 } }
+      { type: 'table', x: 413, y: 171.5, w: 70, h: 130, label: 'Lectern', podium: { w: 30, h: 30 } }
     ],
 
     blocks: [
@@ -178,7 +178,7 @@ export const CONFIG = {
       },
       {
         id: 'RIGHTBLEACHERSISO', name: 'Right Bleacher — Floor Seats',
-        x: 711, y: 406.5, rotation: 0,
+        x: 711, y: 416.5, rotation: 0,
         cellSize: 32, gap: 10,
         showFrame: false, // no section border/label — just 3 loose seats
         grid: [
@@ -192,7 +192,7 @@ export const CONFIG = {
       {
         id: 'LEFTSTAGE', name: 'Left Stage',
         labelPos: 'top',
-        x: 171, y: 90.5, rotation: -120,
+        x: 184, y: 90.5, rotation: -120,
         cellSize: 34, gap: 6,
         grid: [
           [G(), A()],
@@ -203,7 +203,7 @@ export const CONFIG = {
       },
       {
         id: 'LEFTSTAGEISO', name: 'Left Stage — Front Seats',
-        x: 194, y: 219.5, rotation: -30,
+        x: 207, y: 219.5, rotation: -30,
         cellSize: 32, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
         grid: [
@@ -213,7 +213,7 @@ export const CONFIG = {
       {
         id: 'CENTERSTAGE', name: 'Center Stage',
         labelPos: 'top',
-        x: 401, y: 41.5, rotation: -90,
+        x: 414, y: 41.5, rotation: -90,
         cellSize: 34, gap: 6,
         grid: [
           [A(), A()],
@@ -225,14 +225,14 @@ export const CONFIG = {
       // Two lone actor seats flanking the Lectern, one on each side.
       {
         id: 'LECTERNL', name: 'Lectern — Left',
-        x: 360, y: 250, rotation: -90,
+        x: 373, y: 250, rotation: -90,
         cellSize: 34, gap: 6,
         showFrame: false,
         grid: [[A()]]
       },
       {
         id: 'LECTERNR', name: 'Lectern — Right',
-        x: 480, y: 250, rotation: -90,
+        x: 493, y: 250, rotation: -90,
         cellSize: 34, gap: 6,
         showFrame: false,
         grid: [[A()]]
@@ -245,7 +245,7 @@ export const CONFIG = {
       {
         id: 'RIGHTSTAGE', name: 'Right \n Stage',
         labelPos: 'top',
-        x: 600, y: 130.5, rotation: -145,
+        x: 613, y: 130.5, rotation: -145,
         cellSize: 34, gap: 6,
         grid: [
           [D('IA'), D('IA'), C('MN'), G()],
@@ -254,7 +254,7 @@ export const CONFIG = {
       },
       {
         id: 'RIGHTSTAGEISO', name: 'Right Stage — Front Seats',
-        x: 554, y: 209.5, rotation: -145,
+        x: 567, y: 209.5, rotation: -145,
         cellSize: 32, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
         grid: [
