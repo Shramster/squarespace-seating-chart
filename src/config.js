@@ -91,7 +91,7 @@ export const CONFIG = {
 
     furniture: [
       { type: 'piano', x: 780, y: 213.5, w: 100, h: 150, label: 'Grand Piano' },
-      { type: 'table', x: 413, y: 171.5, w: 70, h: 130, label: 'Lectern', podium: { w: 30, h: 30 } }
+      { type: 'table', x: 420, y: 171.5, w: 70, h: 130, label: 'Lectern', podium: { w: 30, h: 30 } }
     ],
 
     blocks: [
@@ -203,7 +203,7 @@ export const CONFIG = {
       },
       {
         id: 'LEFTSTAGEISO', name: 'Left Stage — Front Seats',
-        x: 207, y: 219.5, rotation: -30,
+        x: 203, y: 216.5, rotation: -30,
         cellSize: 32, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
         grid: [
@@ -213,7 +213,7 @@ export const CONFIG = {
       {
         id: 'CENTERSTAGE', name: 'Center Stage',
         labelPos: 'top',
-        x: 414, y: 41.5, rotation: -90,
+        x: 419, y: 41.5, rotation: -90,
         cellSize: 34, gap: 6,
         grid: [
           [A(), A()],
@@ -225,14 +225,14 @@ export const CONFIG = {
       // Two lone actor seats flanking the Lectern, one on each side.
       {
         id: 'LECTERNL', name: 'Lectern — Left',
-        x: 373, y: 250, rotation: -90,
+        x: 380, y: 250, rotation: -90,
         cellSize: 34, gap: 6,
         showFrame: false,
         grid: [[A()]]
       },
       {
         id: 'LECTERNR', name: 'Lectern — Right',
-        x: 493, y: 250, rotation: -90,
+        x: 497, y: 250, rotation: -90,
         cellSize: 34, gap: 6,
         showFrame: false,
         grid: [[A()]]
