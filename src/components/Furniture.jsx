@@ -48,11 +48,11 @@ export default function Furniture({ piece }) {
         <rect x={piece.x} y={piece.y} width={piece.w} height={piece.h} rx={4} />
         <rect
           className="sc-podium"
-          x={(cx + podium.w / 2)}
-          y={(cy + podium.h / 2)}
+          x={(cx - podium.w / 2)}
+          y={(cy + 5 + podium.h / 2)}
           width={podium.w}
           height={podium.h}
-          transform={`rotate(45 ${cx} ${cy})`}
+          // transform={`rotate(45 ${cx} ${cy})`}
         />
       </g>
     )

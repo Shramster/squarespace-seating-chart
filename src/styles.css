@@ -1,7 +1,7 @@
 .seat-chart {
   --blue: #1ba0f3;
   --blue-hover: #3492e2;
-  --navy: #113686;
+  --navy: #163da3;
   --bg: #fefefe;
   --ink: #1b1b1b;
   --ink-dim: rgba(27, 27, 27, 0.55);
@@ -10,9 +10,9 @@
   --seat-open-border: rgba(17, 54, 134, 1);
   --venue-bg: #cfe6fb;
   --seat-delegate: #3ea6f0;
-  --seat-chair: #11316f;
+  --seat-chair: #163da3;
   --seat-candidate: #0d0d0d;
-  --seat-unavailable: #8b95a3;
+  --seat-unavailable: #c8c8c8;
   --furniture-fill: #14171a;
   --star: #22d3ee;
 
