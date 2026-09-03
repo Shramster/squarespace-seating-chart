@@ -344,11 +344,11 @@
   justify-content: center;
 }
 .sc-legend-star {
-  width: 10px;
-  height: 10px;
+  width: 1em;
+  height: 1em;
   fill: var(--star);
-  stroke: var(--navy);
-  stroke-width: 0.75;
+  stroke: var(--star);
+  stroke-width: .5;
   stroke-linejoin: round;
 }
 .sc-legend-swatch.sold {

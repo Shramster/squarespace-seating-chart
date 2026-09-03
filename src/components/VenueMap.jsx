@@ -182,6 +182,11 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
           x={sideLabel.x}
           y={sideLabel.y}
           textAnchor={sideLabel.anchor}
+          transform={
+            block.labelRotation
+              ? `rotate(${block.labelRotation} ${sideLabel.x} ${sideLabel.y})`
+              : undefined
+          }
         >
           {block.name || block.id}
         </text>
@@ -200,19 +205,21 @@ export default function VenueMap({ venue, soldSeats, selected, onSelectSeat }) {
         aria-label="Venue seat map"
       >
 
-        {venue.furniture.map((piece, i) => (
-          <Furniture key={i} piece={piece} />
-        ))}
+        <g transform={`translate(${venue.contentOffsetX ?? 0} ${venue.contentOffsetY ?? 0})`}>
+          {venue.furniture.map((piece, i) => (
+            <Furniture key={i} piece={piece} />
+          ))}
 
-        {venue.blocks.map((block) => (
-          <SeatBlock
-            key={block.id}
-            block={block}
-            soldSeats={soldSeats}
-            selected={selected}
-            onSelectSeat={onSelectSeat}
-          />
-        ))}
+          {venue.blocks.map((block) => (
+            <SeatBlock
+              key={block.id}
+              block={block}
+              soldSeats={soldSeats}
+              selected={selected}
+              onSelectSeat={onSelectSeat}
+            />
+          ))}
+        </g>
       </svg>
     </div>
   )

@@ -84,8 +84,10 @@ export const CONFIG = {
   // cell's A()/G()/D()/C()/N() in place below — no effect on sold-seat
   // tracking.
   venue: {
-    width: 900,
-    height: 800,
+    width: 926,
+    height: 842,
+    contentOffsetX: 0,
+    contentOffsetY: 1,
 
     walls: { x: 10, y: 10, w: 880, h: 780, rx: 12 },
 
@@ -101,7 +103,6 @@ export const CONFIG = {
         id: 'BACK', name: 'Back Bleachers',
         x: 390, y: 500, rotation: -90,
         labelPos: 'top',
-        // labelOffsetX:,
         cellSize: 32, gap: 6,
         grid: [
           [A(), D('PA'), D('PA'), A()],
@@ -192,6 +193,12 @@ export const CONFIG = {
       {
         id: 'LEFTSTAGE', name: 'Left Stage',
         labelPos: 'top',
+        labelOffsetX: -25,
+        labelOffsetY: 45,
+        // labelRotation: readable equivalent of this block's rotation
+        // (rotation mod 180, mapped into -90..90) so the label reads
+        // left-to-right while staying visually aligned to the seating rows.
+        labelRotation: -30,
         x: 184, y: 90.5, rotation: -120,
         cellSize: 34, gap: 6,
         grid: [
@@ -241,10 +248,15 @@ export const CONFIG = {
       // labelPos: 'top' centers the section label over the block's top
       // (short) edge instead of the default top-right corner — the
       // default reads awkwardly here because of this block's rotation.
-      // labelOffsetX nudges it right so it clears the Center Stage block.
+      // labelRotation: readable equivalent of this block's rotation
+      // (rotation mod 180, mapped into -90..90) so the label reads
+      // left-to-right while staying visually aligned to the seating rows.
       {
         id: 'RIGHTSTAGE', name: 'Right \n Stage',
         labelPos: 'top',
+        labelOffsetX: 40,
+        labelOffsetY: 57,
+        labelRotation: 35,
         x: 613, y: 130.5, rotation: -145,
         cellSize: 34, gap: 6,
         grid: [
