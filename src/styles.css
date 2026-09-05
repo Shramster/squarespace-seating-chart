@@ -149,7 +149,8 @@
     /* -webkit-overflow-scrolling: touch; */
     /* max-height: 60vh; */
     /* height: auto; */
-    /* max-width: 400px; */
+    max-width: 800px;
+    margin: auto;
   }
   /* Scale down from full size rather than showing it 1:1 — full size
      forces a lot of horizontal scrolling on a phone. Deliberately not
@@ -390,17 +391,22 @@
   flex-wrap: wrap;
 }
 .sc-panel-text {
-  font-size: 0.8125em;
+  font-size: 1.125em;
   color: var(--ink);
   line-height: 1.5;
 }
 .sc-panel-text strong {
   color: var(--navy);
-  font-size: 1.1538em;
+  font-size: 1.5em;
 }
 .sc-panel-character {
   color: var(--ink-dim);
   font-style: italic;
+}
+.sc-panel-description {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--ink);
 }
 .sc-panel-empty {
   color: var(--ink-dim);
