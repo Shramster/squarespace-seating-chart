@@ -9,6 +9,7 @@
 // Run with: node generate_show_test_data.mjs
 import { writeFileSync } from 'node:fs'
 import { CONFIG, SEAT_INDEX, seatProductSlug } from '../../src/config.js'
+import { ticketDescription } from '../../src/ticketDescriptions.js'
 
 // Real tier pricing (src/config.js's CONFIG.pricesByType is the source of
 // truth the frontend uses — mirrored here for the full-price catalog).
@@ -79,7 +80,6 @@ function buildRows(seats, priceByType) {
     seats.forEach((seat) => {
       const sku = `${show.sku}-${seat.code}`
       const price = priceByType[seat.type]
-      const typeLabel = TYPE_LABEL[seat.type]
 
       rows.push(
         [
@@ -89,7 +89,7 @@ function buildRows(seats, priceByType) {
           CONFIG.squarespaceProductPage,
           seatProductSlug(show.sku, seat.code),
           `Convention — ${show.label} — Seat ${seat.label}`,
-          `<p>Reserved seating for the ${show.label} performance — Seat ${seat.label} (${typeLabel}).</p>`,
+          `<p>${ticketDescription(seat)}</p>`,
           sku,
           '', // GTIN
           '', // MPN
