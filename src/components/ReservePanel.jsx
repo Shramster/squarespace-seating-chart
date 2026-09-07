@@ -24,11 +24,11 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink }) {
         <span className="sc-panel-description">{ticketDescription(meta)}</span>
         <br />
         <br />
-        Reserving opens checkout for this exact seat in a new tab.
+        Reserving takes you to checkout for this exact seat.
       </div>
     <div style={{ display: "flex", justifyContent: 'flex-end', width: "100%"}}>
 
-      <a className="sc-reserve-btn" href={buyLink} target="_blank" rel="noopener noreferrer">
+      <a className="sc-reserve-btn" href={buyLink}>
         Reserve this seat
       </a>
       </div>

@@ -7,7 +7,13 @@ import Legend from './components/Legend.jsx'
 import ReservePanel from './components/ReservePanel.jsx'
 
 export default function App() {
-  const [activeShow, setActiveShow] = useState(CONFIG.shows[0])
+  const [activeShow, setActiveShow] = useState(() => {
+    const requested = new URLSearchParams(window.location.search).get('show')
+    return (
+      CONFIG.shows.find((s) => s.sku.toLowerCase() === requested?.toLowerCase()) ??
+      CONFIG.shows[0]
+    )
+  })
   const [selected, setSelected] = useState(null)
   const { soldSeats, status } = useSeatStatus(CONFIG.apiBase, activeShow.sku)
 

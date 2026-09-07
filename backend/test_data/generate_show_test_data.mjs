@@ -8,7 +8,7 @@
 // `manage.py import_squarespace_csv test_data/<file>.csv`.
 // Run with: node generate_show_test_data.mjs
 import { writeFileSync } from 'node:fs'
-import { CONFIG, SEAT_INDEX, seatProductSlug } from '../../src/config.js'
+import { CONFIG, SEAT_INDEX, seatProductSlug, showLink } from '../../src/config.js'
 import { ticketDescription } from '../../src/ticketDescriptions.js'
 
 // Real tier pricing (src/config.js's CONFIG.pricesByType is the source of
@@ -89,7 +89,7 @@ function buildRows(seats, priceByType) {
           CONFIG.squarespaceProductPage,
           seatProductSlug(show.sku, seat.code),
           `Convention — ${show.label} — Seat ${seat.label}`,
-          `<p>${ticketDescription(seat)}</p>`,
+          `<p>${ticketDescription(seat)}</p><p><a href="${showLink(show.sku)}">&larr; Back to ${show.label}</a></p>`,
           sku,
           '', // GTIN
           '', // MPN
