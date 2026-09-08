@@ -109,7 +109,7 @@ export const CONFIG = {
       // Back Bleachers — tall, 4 seats across, 11 rows, split by a
       // furniture gap (row 6) between the upper and lower halves.
       {
-        id: 'BACK', name: 'Back Bleachers',
+        id: 'BLEACHERS-BACK', name: 'Back Bleachers',
         x: 390, y: 500, rotation: -90,
         labelPos: 'top',
         cellSize: 32, gap: 6,
@@ -131,7 +131,7 @@ export const CONFIG = {
       // Left Bleachers — two pairs of columns split by a center aisle
       // (col index 2 stays empty except for one front-row seat).
       {
-        id: 'LEFTBLEACHERS', name: 'Left Bleachers',
+        id: 'BLEACHERS-LEFT', name: 'Left Bleachers',
         labelPos: 'top',
         x: 43, y: 486.5, rotation: -90,
         cellSize: 32, gap: 6,
@@ -145,7 +145,7 @@ export const CONFIG = {
 
       // Left Aisle — freestanding block below Left Bleachers.
       {
-        id: 'LEFTAISLE', name: 'Left Aisle',
+        id: 'AISLE-LEFT', name: 'Left Aisle',
         labelPos: 'top',
         x: 275, y: 380, rotation: -90,
         cellSize: 32, gap: 6,
@@ -159,7 +159,7 @@ export const CONFIG = {
 
       // Right Aisle — separated from Left Aisle by a walkway gap.
       {
-        id: 'RIGHTAISLE', name: 'Right Aisle',
+        id: 'AISLE-RIGHT', name: 'Right Aisle',
         labelPos: 'top',
         x: 490, y: 380, rotation: -90,
         cellSize: 32, gap: 6,
@@ -174,7 +174,7 @@ export const CONFIG = {
       // Right Bleachers — mirrors Left Bleachers' aisle layout, plus one
       // isolated far-right column (col index 5, only rows 1 and 4).
       {
-        id: 'RIGHTBLEACHERS', name: 'Right Bleachers',
+        id: 'BLEACHERS-RIGHT', name: 'Right Bleachers',
         labelOffsetY: -42,
         labelPos: 'top',
         x: 693, y: 486.5, rotation: -90,
@@ -187,7 +187,7 @@ export const CONFIG = {
         ]
       },
       {
-        id: 'RIGHTBLEACHERSISO', name: 'Right Bleacher — Floor Seats',
+        id: 'BLEACHERS-RIGHT-FRONT', name: 'Right Bleacher — Floor Seats',
         x: 711, y: 416.5, rotation: 0,
         cellSize: 32, gap: 10,
         showFrame: false, // no section border/label — just 3 loose seats
@@ -200,7 +200,7 @@ export const CONFIG = {
       // each paired with a small satellite block of isolated seats that
       // sit in front of its platform in the reference chart.
       {
-        id: 'LEFTSTAGE', name: 'Left Stage',
+        id: 'STAGE-LEFT', name: 'Left Stage',
         labelPos: 'top',
         labelOffsetX: -25,
         labelOffsetY: 45,
@@ -218,7 +218,7 @@ export const CONFIG = {
         ]
       },
       {
-        id: 'LEFTSTAGEISO', name: 'Left Stage — Front Seats',
+        id: 'STAGE-LEFT-FRONT', name: 'Left Stage — Front Seats',
         x: 203, y: 216.5, rotation: -30,
         cellSize: 32, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
@@ -227,7 +227,7 @@ export const CONFIG = {
         ]
       },
       {
-        id: 'CENTERSTAGE', name: 'Center Stage',
+        id: 'STAGE-CENTER', name: 'Center Stage',
         labelPos: 'top',
         x: 419, y: 41.5, rotation: -90,
         cellSize: 34, gap: 6,
@@ -261,7 +261,7 @@ export const CONFIG = {
       // (rotation mod 180, mapped into -90..90) so the label reads
       // left-to-right while staying visually aligned to the seating rows.
       {
-        id: 'RIGHTSTAGE', name: 'Right \n Stage',
+        id: 'STAGE-RIGHT', name: 'Right \n Stage',
         labelPos: 'top',
         labelOffsetX: 40,
         labelOffsetY: 57,
@@ -269,17 +269,17 @@ export const CONFIG = {
         x: 613, y: 130.5, rotation: -145,
         cellSize: 34, gap: 6,
         grid: [
-          [D('IA'), D('IA'), C('MN'), G()],
-          [A(), D('MN'), A(), G()]
+          [A(), A(), D('IA'), D('IA')],
+          [G(), D('MN'), C('MN'), G()]
         ]
       },
       {
-        id: 'RIGHTSTAGEISO', name: 'Right Stage — Front Seats',
+        id: 'STAGE-RIGHT-FRONT', name: 'Right Stage — Front Seats',
         x: 567, y: 209.5, rotation: -145,
         cellSize: 32, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
         grid: [
-          [D('SEC'), N('RAY'), G()]
+          [G(), N('RAY'), D('SEC')]
         ]
       }
     ]
