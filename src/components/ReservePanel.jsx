@@ -15,7 +15,10 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink }) {
     <div className="sc-panel">
       <div className="sc-panel-text">
     <div style={{ display: "flex", justifyContent: 'space-between'}}>
-        <strong>{seatDisplayName(meta)}</strong>  <strong>
+        <strong className="sc-panel-name">
+          <span className={`sc-legend-swatch ${meta.type !== 'ga' ? meta.type : ''}`}></span>
+          {seatDisplayName(meta)}
+        </strong>  <strong>
     ${meta.price}
     </strong>
     </div>
@@ -24,7 +27,7 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink }) {
         <span className="sc-panel-description">{ticketDescription(meta)}</span>
         <br />
         <br />
-        Reserving takes you to checkout for this exact seat.
+        Checkout continues in a new tab.
       </div>
     <div style={{ display: "flex", justifyContent: 'flex-end', width: "100%"}}>
 
