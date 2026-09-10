@@ -5,7 +5,6 @@ import DayTabs from './components/DayTabs.jsx'
 import VenueMap from './components/VenueMap.jsx'
 import Legend from './components/Legend.jsx'
 import ReservePanel from './components/ReservePanel.jsx'
-import seatingTableImg from './assets/seating-table.jpg'
 
 export default function App() {
   const [activeShow, setActiveShow] = useState(() => {
@@ -61,7 +60,7 @@ export default function App() {
     <div style={{overflowX: "scroll"}}>
       <img
         className="sc-price-table"
-        src={seatingTableImg}
+        src={`${CONFIG.apiBase}/static/seating-table.jpg`}
         alt="Ticket price tiers: Gallery $44, Delegate $68, Chairperson $76, Candidate $100 — comparing assigned seat, proximity to actors, ballot vote, commemorative button, Act 2 lines, Convention tee-shirt and photo, and meal ticket benefits per tier."
       />
     </div>

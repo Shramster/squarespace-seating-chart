@@ -48,9 +48,12 @@ export function seatBuyLink(showSku, seatCode) {
 
 // Deep link back to the seat-chart embed, preselecting a show date — used
 // on each seat's product page so buyers can return to add another seat
-// without re-navigating by hand.
+// without re-navigating by hand. This is CONFIG.squarespaceEmbedPage (the
+// standalone page hosting the interactive seat map's Code Block), NOT
+// squarespaceProductPage (the plain Squarespace Store page individual
+// seat products live under) — those are two different pages.
 export function showLink(showSku) {
-  return `${CONFIG.squarespaceBase}/${CONFIG.squarespaceProductPage}?show=${showSku}`
+  return `${CONFIG.squarespaceBase}/${CONFIG.squarespaceEmbedPage}?show=${showSku}`
 }
 
 // Buyer-facing word for each sellable seat type — shared by the Squarespace
@@ -65,11 +68,11 @@ export const TYPE_LABEL = {
   candidate: 'Candidate'
 }
 
-// "Saturday, October 3, 3:00 PM" — full day name + full month name, driven
+// "Saturday, October 3 @ 3pm" — full day name + full month name, driven
 // off `show.date` so a day-of-week can never drift out of sync with the
-// actual calendar date. Hand-rolled AM/PM (rather than
-// Intl.DateTimeFormat's default "3:00 PM"/"3 PM" — same content here) kept
-// simple since we already need a fixed "H:MM AM/PM" shape.
+// actual calendar date. Hand-rolled lowercase compact time (minutes
+// included only if non-zero) since Intl.DateTimeFormat won't produce
+// that exact shape on its own.
 export function formatShowDateTime(show) {
   const d = new Date(show.date)
   const dayMonth = new Intl.DateTimeFormat('en-US', {
@@ -79,14 +82,14 @@ export function formatShowDateTime(show) {
   }).format(d)
   let hours = d.getHours()
   const minutes = d.getMinutes()
-  const period = hours >= 12 ? 'PM' : 'AM'
+  const period = hours >= 12 ? 'pm' : 'am'
   hours = hours % 12 || 12
-  const time = `${hours}:${String(minutes).padStart(2, '0')} ${period}`
-  return `${dayMonth}, ${time}`
+  const time = minutes ? `${hours}:${String(minutes).padStart(2, '0')}${period}` : `${hours}${period}`
+  return `${dayMonth} @ ${time}`
 }
 
-// Squarespace product Title for one seat: "Saturday, October 3, 3:00 PM,
-// Gallery". Format: Day_of_week, Month Day, Time, Seat-Type.
+// Squarespace product Title for one seat: "Saturday, October 3 @ 3pm,
+// Gallery". Format: Day_of_week, Month Day @ Time, Seat-Type.
 export function ticketTitle(show, seat) {
   return `${formatShowDateTime(show)}, ${TYPE_LABEL[seat.type] ?? seat.type}`
 }
@@ -157,8 +160,17 @@ export const CONFIG = {
   // imported under (the CSV's `Product Page` column) — this site's store
   // lives at /tickets, so new seat products land at
   // /tickets/p/<seatProductSlug()> instead of failing bulk import with
-  // "Product page not found."
+  // "Product page not found." This is a plain Squarespace Store page
+  // (template-generated product grid) — NOT where the interactive seat
+  // map lives; see squarespaceEmbedPage below for that.
   squarespaceProductPage: 'tickets',
+
+  // Slug of the separate, standalone page hosting the seat-chart embed's
+  // own Code Block (see RUNBOOK.md §1 — the embed goes on its own page,
+  // never duplicated onto a product page or the Store page itself).
+  // showLink() uses this to send a buyer back to the interactive map
+  // after viewing one seat's product page.
+  squarespaceEmbedPage: 'seating-chart',
 
   // See SHOW_DATES/formatShowLabel above.
   shows: SHOW_DATES.map((s) => ({ ...s, label: formatShowLabel(s) })),

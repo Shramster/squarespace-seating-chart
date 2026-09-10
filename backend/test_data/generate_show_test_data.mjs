@@ -1,19 +1,17 @@
 // Generator for Squarespace product-import CSVs: one full-price catalog
-// covering every sellable seat, plus a small $0 test subset (one per tier)
-// that's safe to import into a real Squarespace test site. Produces
-// Squarespace product-import CSVs (one product per seat per show, grouped
-// into a per-show-day Category — see seatProductSlug() in src/config.js
-// for why this is per-seat rather than per-show-with-variants). Import
-// either directly into Django with
+// covering every sellable seat, one per-show slice of that same catalog
+// (for importing a single performance date at a time — e.g. while
+// waiting on stakeholder sign-off for the rest), plus a small $0 test
+// subset (one per tier) that's safe to import into a real Squarespace
+// test site. Produces Squarespace product-import CSVs (one product per
+// seat per show, grouped into a per-show-day Category — see
+// seatProductSlug() in src/config.js for why this is per-seat rather
+// than per-show-with-variants). Import either directly into Django with
 // `manage.py import_squarespace_csv test_data/<file>.csv`.
 // Run with: node generate_show_test_data.mjs
 import { writeFileSync } from 'node:fs'
-import { CONFIG, SEAT_INDEX, TYPE_LABEL, seatProductSlug, showLink, ticketTitle } from '../../src/config.js'
-import { ticketDescription } from '../../src/ticketDescriptions.js'
-
-// Real tier pricing (src/config.js's CONFIG.pricesByType is the source of
-// truth the frontend uses — mirrored here for the full-price catalog).
-const REAL_PRICE = CONFIG.pricesByType
+import { CONFIG, SEAT_INDEX, TYPE_LABEL } from '../../src/config.js'
+import { HEADER, buildRow } from './csv_common.mjs'
 
 const SELLABLE_TYPES = new Set(Object.keys(TYPE_LABEL))
 
@@ -31,89 +29,11 @@ const subsetSeats = Object.keys(TYPE_LABEL).flatMap((type) =>
   sellableSeats.filter((seat) => seat.type === type).slice(0, Math.ceil(10 / Object.keys(TYPE_LABEL).length))
 ).slice(0, 10)
 
-const HEADER = [
-  'Product ID [Non Editable]',
-  'Variant ID [Non Editable]',
-  'Product Type [Non Editable]',
-  'Product Page',
-  'Product URL',
-  'Title',
-  'Description',
-  'SKU',
-  'GTIN',
-  'MPN',
-  'Option Name 1',
-  'Option Value 1',
-  'Option Name 2',
-  'Option Value 2',
-  'Option Name 3',
-  'Option Value 3',
-  'Price',
-  'Sale Price',
-  'On Sale',
-  'Stock',
-  'Categories',
-  'Tags',
-  'Weight',
-  'Length',
-  'Width',
-  'Height',
-  'Visible',
-  'Hosted Image URLs'
-].join(',')
-
-function csvField(value) {
-  const s = String(value ?? '')
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-}
-
-function buildRows(seats, priceByType) {
+function buildRows(showsToInclude, seats, priceByType) {
   const rows = [HEADER]
-  for (const show of shows) {
+  for (const show of showsToInclude) {
     seats.forEach((seat) => {
-      const sku = `${show.sku}-${seat.code}`
-      const price = priceByType[seat.type]
-
-      rows.push(
-        [
-          '', // Product ID
-          '', // Variant ID
-          'SERVICE',
-          CONFIG.squarespaceProductPage,
-          seatProductSlug(show.sku, seat.code),
-          ticketTitle(show, seat),
-          `<p>${ticketDescription(seat)}</p><p><a href="${showLink(show.sku)}">&larr; Back to ${show.label}</a></p>`,
-          sku,
-          '', // GTIN
-          '', // MPN
-          '', // Option Name 1
-          '', // Option Value 1
-          '', // Option Name 2
-          '', // Option Value 2
-          '', // Option Name 3
-          '', // Option Value 3
-          price,
-          '', // Sale Price
-          'No',
-          1,
-          show.label,
-          'Convention',
-          '', // Weight (physical-shipping only, not applicable to SERVICE)
-          '', // Length
-          '', // Width
-          '', // Height
-          'Yes',
-          // Same static image for every product — served by the same
-          // whitenoise/STATICFILES_DIRS mechanism as seat-chart.js/.css
-          // (see backend/ticketing_dev/settings.py), copied verbatim from
-          // public/ticket_product_image.jpg by Vite's build (not bundled
-          // through the JS-asset pipeline, which would collide with
-          // seat-chart.jpg — see vite.config.js's assetFileNames).
-          `${CONFIG.apiBase}/static/ticket_product_image.jpg`
-        ]
-          .map(csvField)
-          .join(',')
-      )
+      rows.push(buildRow(show, seat, priceByType[seat.type]))
     })
   }
   return rows
@@ -121,16 +41,26 @@ function buildRows(seats, priceByType) {
 
 const zeroPrice = Object.fromEntries(Object.keys(TYPE_LABEL).map((type) => [type, 0]))
 
-const fullRows = buildRows(sellableSeats, REAL_PRICE)
-const subsetRows = buildRows(subsetSeats, zeroPrice)
+const fullRows = buildRows(shows, sellableSeats, CONFIG.pricesByType)
+const subsetRows = buildRows(shows, subsetSeats, zeroPrice)
 
 writeFileSync(new URL('./product_import-shows.csv', import.meta.url), fullRows.join('\n') + '\n')
 writeFileSync(new URL('./product_import-test-subset.csv', import.meta.url), subsetRows.join('\n') + '\n')
 
-// Django imports these same CSVs directly (see ticketing's
-// import_squarespace_csv management command) — SKUs are
-// "<show_sku>-<seat_code>", so no separate seed file is needed.
-
 console.log(`${shows.length} shows: ${shows.map((s) => s.sku).join(', ')}`)
 console.log(`${sellableSeats.length} sellable seats/show -> ${fullRows.length - 1} rows in product_import-shows.csv`)
 console.log(`${subsetSeats.length} seats/show -> ${subsetRows.length - 1} rows in product_import-test-subset.csv`)
+
+// Per-show slices of the same full-price catalog — for importing one
+// performance date at a time (e.g. OCT03 now, OCT04 once it's approved)
+// without needing a separate hand-maintained file per show.
+for (const show of shows) {
+  const rows = buildRows([show], sellableSeats, CONFIG.pricesByType)
+  const filename = `product_import-${show.sku.toLowerCase()}.csv`
+  writeFileSync(new URL(`./${filename}`, import.meta.url), rows.join('\n') + '\n')
+  console.log(`${sellableSeats.length} seats -> ${rows.length - 1} rows in ${filename}`)
+}
+
+// Django imports these same CSVs directly (see ticketing's
+// import_squarespace_csv management command) — SKUs are
+// "<show_sku>-<seat_code>", so no separate seed file is needed.
