@@ -10,14 +10,15 @@
 // `manage.py import_squarespace_csv test_data/<file>.csv`.
 // Run with: node generate_show_test_data.mjs
 import { writeFileSync } from 'node:fs'
-import { CONFIG, SEAT_INDEX, TYPE_LABEL } from '../../src/config.js'
+import { CONFIG, ALL_SHOWS, SEAT_INDEX, TYPE_LABEL } from '../../src/config.js'
 import { HEADER, buildRow } from './csv_common.mjs'
 
 const SELLABLE_TYPES = new Set(Object.keys(TYPE_LABEL))
 
-// Shows come straight from config.js — currently just the one placeholder
-// show left in CONFIG.shows; swap in real performance dates there when
-// they're finalized, no change needed here.
+// The combined "everything" files only cover buyer-facing (active) shows
+// — an inactive show (see ALL_SHOWS in config.js) isn't meant to be
+// bulk-imported yet, so it's deliberately left out here to avoid it
+// accidentally riding along in the "import everything" file.
 const shows = CONFIG.shows
 
 const sellableSeats = [...SEAT_INDEX.entries()]
@@ -53,8 +54,10 @@ console.log(`${subsetSeats.length} seats/show -> ${subsetRows.length - 1} rows i
 
 // Per-show slices of the same full-price catalog — for importing one
 // performance date at a time (e.g. OCT03 now, OCT04 once it's approved)
-// without needing a separate hand-maintained file per show.
-for (const show of shows) {
+// without needing a separate hand-maintained file per show. Uses
+// ALL_SHOWS (not the active-only `shows` above) so an inactive show still
+// gets a ready-to-import file whenever it's needed.
+for (const show of ALL_SHOWS) {
   const rows = buildRows([show], sellableSeats, CONFIG.pricesByType)
   const filename = `product_import-${show.sku.toLowerCase()}.csv`
   writeFileSync(new URL(`./${filename}`, import.meta.url), rows.join('\n') + '\n')

@@ -121,15 +121,25 @@ export function formatShowLabel(show) {
 }
 
 // Performance dates — sku must match a Show.sku_prefix in Django. `label`
-// is computed from `date` via formatShowLabel() below (see CONFIG.shows),
-// not hand-typed, so it can't go stale.
+// is computed from `date` via formatShowLabel() below (see ALL_SHOWS),
+// not hand-typed, so it can't go stale. `active: false` hides a show from
+// the buyer-facing day picker (CONFIG.shows below) without deleting it —
+// the catalog generator still uses ALL_SHOWS, so an inactive date's
+// per-show CSV stays available to import whenever it's ready.
 //
 // Sign-off round: Oct 3 - 4, 2026 only — add the remaining performance
 // dates here once these two are approved.
 const SHOW_DATES = [
   { sku: 'OCT03', date: '2026-10-03T15:00:00' },
-  { sku: 'OCT04', date: '2026-10-04T15:00:00' }
+  // Not yet on sale — catalog isn't posted to Squarespace yet. Remove
+  // `active: false` once it's ready to show up for buyers.
+  { sku: 'OCT04', date: '2026-10-04T15:00:00', active: false }
 ]
+
+// Every configured show, regardless of buyer-facing visibility — the
+// Squarespace CSV generator uses this (not CONFIG.shows) so an inactive
+// show still gets its own ready-to-import catalog file.
+export const ALL_SHOWS = SHOW_DATES.map((s) => ({ ...s, label: formatShowLabel(s) }))
 
 export const CONFIG = {
   // Dev: match whatever host served this page, so it also works from a
@@ -172,8 +182,9 @@ export const CONFIG = {
   // after viewing one seat's product page.
   squarespaceEmbedPage: 'seating-chart',
 
-  // See SHOW_DATES/formatShowLabel above.
-  shows: SHOW_DATES.map((s) => ({ ...s, label: formatShowLabel(s) })),
+  // Buyer-facing shows only — see ALL_SHOWS above for the full list
+  // (including any not-yet-active show) used by the CSV generator.
+  shows: ALL_SHOWS.filter((s) => s.active !== false),
 
   // The real room: several distinct seating blocks (some rotated) plus
   // furniture, transcribed from SeatChart8222026.png (per-seat
