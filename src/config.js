@@ -17,6 +17,12 @@ const C = (label) => seat('chair', { label })
 const N = (name) => seat('candidate', { label: name })
 const _ = null // no seat here (gap / walkway / non-seat space)
 
+// Toggle the on-seat "<Letter><Number>" text label VenueMap.jsx draws
+// inside each seat circle (debug/reference aid — not shown to buyers in
+// production). Off by default; flip to true when you need to visually
+// check the seat-code layout again.
+export const SHOW_SEAT_LABELS = false
+
 // ADA(seat) marks any seat (from A()/G()/D()/C()/N() above) as
 // ADA-accessible — composes rather than duplicating the 5 constructors
 // above, so it reads clearly in a grid literal (e.g. `ADA(D('UT'))`) and
@@ -85,6 +91,43 @@ export function ticketTitle(show, seat) {
   return `${formatShowDateTime(show)}, ${TYPE_LABEL[seat.type] ?? seat.type}`
 }
 
+// "1st"/"2nd"/"3rd"/"4th"... for formatShowLabel below.
+function ordinal(n) {
+  const suffixes = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return `${n}${suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]}`
+}
+
+// A short, casual show label — "Saturday Oct 3rd 3pm" — used for the
+// buyer-facing day picker (DayTabs.jsx), the CSV's Categories column, and
+// the "Back to {label}" link in each product's Description. Derived from
+// `show.date` (same single-source-of-truth pattern as
+// formatShowDateTime/ticketTitle above) so it can't drift from the real
+// date/time the way a hand-typed label could.
+export function formatShowLabel(show) {
+  const d = new Date(show.date)
+  const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(d)
+  const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(d)
+  const day = ordinal(d.getDate())
+  let hours = d.getHours()
+  const minutes = d.getMinutes()
+  const period = hours >= 12 ? 'pm' : 'am'
+  hours = hours % 12 || 12
+  const time = minutes ? `${hours}:${String(minutes).padStart(2, '0')}${period}` : `${hours}${period}`
+  return `${weekday} ${month} ${day} ${time}`
+}
+
+// Performance dates — sku must match a Show.sku_prefix in Django. `label`
+// is computed from `date` via formatShowLabel() below (see CONFIG.shows),
+// not hand-typed, so it can't go stale.
+//
+// Sign-off round: Oct 3 - 4, 2026 only — add the remaining performance
+// dates here once these two are approved.
+const SHOW_DATES = [
+  { sku: 'OCT03', date: '2026-10-03T15:00:00' },
+  { sku: 'OCT04', date: '2026-10-04T15:00:00' }
+]
+
 export const CONFIG = {
   // Dev: match whatever host served this page, so it also works from a
   // phone on the LAN (see `make dev-lan`). Prod build always uses the
@@ -117,15 +160,8 @@ export const CONFIG = {
   // "Product page not found."
   squarespaceProductPage: 'tickets',
 
-  // One entry per performance day. sku must match a Show.sku_prefix in
-  // Django.
-  //
-  // Sign-off round: Oct 3 - 4, 2026 only — add the remaining performance
-  // dates here once these two are approved.
-  shows: [
-    { sku: 'OCT03', label: 'Sat, October 3, 2026', date: '2026-10-03T15:00:00' },
-    { sku: 'OCT04', label: 'Sun, October 4, 2026', date: '2026-10-04T15:00:00' }
-  ],
+  // See SHOW_DATES/formatShowLabel above.
+  shows: SHOW_DATES.map((s) => ({ ...s, label: formatShowLabel(s) })),
 
   // The real room: several distinct seating blocks (some rotated) plus
   // furniture, transcribed from SeatChart8222026.png (per-seat
@@ -339,6 +375,8 @@ export const CONFIG = {
       // Two lone actor seats flanking the Lectern, one on each side.
       {
         id: 'LECTERNL', name: 'Lectern — Left',
+        previewGroup: 'LECTERN-LEFT',
+        previewRowLetters: ['A'],
         x: 380, y: 250, rotation: -90,
         cellSize: 34, gap: 6,
         showFrame: false,
@@ -346,6 +384,8 @@ export const CONFIG = {
       },
       {
         id: 'LECTERNR', name: 'Lectern — Right',
+        previewGroup: 'LECTERN-RIGHT',
+        previewRowLetters: ['A'],
         x: 497, y: 250, rotation: -90,
         cellSize: 34, gap: 6,
         showFrame: false,
@@ -391,17 +431,60 @@ export const CONFIG = {
   }
 }
 
+// 1 -> start, 2 -> next letter after start, ... `start` defaults to 'A';
+// a block's previewLetterStart overrides it (e.g. 'B' when a neighboring
+// satellite block already owns 'A').
+function numToLetter(n, start = 'A') {
+  return String.fromCharCode(start.charCodeAt(0) - 1 + n)
+}
+
+// Seat code format: "<previewGroup>-<Letter><Number>" (e.g. "LEFT-STAGE-B3",
+// "BACK-BLEACHERS-D11") — this is the same computation that used to only
+// drive VenueMap.jsx's visual preview label; verified collision-free and
+// gap-free across the whole venue by
+// backend/test_data/verify_preview_skus.mjs before being promoted to the
+// real seat identity here. Each block's own axis settings decide how its
+// letter/number are derived:
+//   - previewGroup: the SKU prefix (shared by a parent block and its
+//     "front seats" satellite, so they code as one logical group).
+//   - previewRowLetters: the letter for each grid row (default mode —
+//     grid ROW is the letter, position-within-row is the number).
+//   - previewSwapRowCol: flips that — position-within-row becomes the
+//     letter and the grid ROW becomes the number instead, for blocks
+//     whose physical "row" is actually stored as the grid's column axis.
+//   - previewReverseLetters / previewLetterStart: reverses the letter
+//     sequence (A-D becomes D-A) and/or shifts where it begins (e.g. 'B'
+//     instead of 'A', when a neighboring satellite already owns 'A').
+//   - previewReverseNumbers / previewNumbersStart: the equivalent
+//     reverse/shift for the number axis.
+// `row` is the specific grid row array (needed to count real seats and
+// this cell's position among them, skipping gaps).
+export function seatCode(block, row, r, c) {
+  const rowSeatCount = row.filter(Boolean).length
+  const numberStart = block.previewNumbersStart || 1
+  let previewNum = 0
+  for (let i = 0; i <= c; i++) {
+    if (row[i]) previewNum++
+  }
+  let letter, number
+  if (block.previewSwapRowCol) {
+    const letterPos = block.previewReverseLetters ? rowSeatCount - previewNum + 1 : previewNum
+    number = (block.previewReverseNumbers ? block.grid.length - r : r + 1) + numberStart - 1
+    letter = numToLetter(letterPos, block.previewLetterStart || 'A')
+  } else {
+    number = (block.previewReverseNumbers ? rowSeatCount - previewNum + 1 : previewNum) + numberStart - 1
+    letter = block.previewRowLetters[r]
+  }
+  return `${block.previewGroup}-${letter}${number}`
+}
+
 // Flat code -> seat lookup, built once from the static venue layout above.
-// code format: "<blockId><row+1>-<col+1>" (1-indexed, e.g. "L2-3") — the
-// same friendly, block-scoped string shown to buyers as the seat's label,
-// so the SKU/permalink a buyer sees matches the seat identity used
-// everywhere else (holds, sold-seat tracking). Still fully derived from
-// block id + grid position, not type or delegate state, so reassigning a
-// cell's A()/G()/D() in place doesn't affect identity or sold-seat
-// tracking. Delegate seats display their assigned state as a separate
-// `label` field (see below) but keep this same position-based `code` as
-// their actual identity, so two delegate seats can safely share a state
-// without colliding.
+// Still fully derived from block + grid position, not type or delegate
+// state, so reassigning a cell's A()/G()/D() in place doesn't affect
+// identity or sold-seat tracking. Delegate seats display their assigned
+// state as a separate `label` field (see below) but keep this same
+// position-based `code` as their actual identity, so two delegate seats
+// can safely share a state without colliding.
 function buildSeatIndex(venue) {
   const index = new Map()
   const seen = new Map()
@@ -409,11 +492,11 @@ function buildSeatIndex(venue) {
     block.grid.forEach((row, r) => {
       row.forEach((cell, c) => {
         if (!cell) return
-        const code = seatCode(block.id, r, c)
+        const code = seatCode(block, row, r, c)
         if (seen.has(code)) {
           throw new Error(
             `Duplicate seat code "${code}" — blocks ${seen.get(code)} and ${block.id} collide. ` +
-              'Adjust block ids so seatCode() output stays unique.'
+              "Adjust the block's group/letter/number axis settings so seatCode() output stays unique."
           )
         }
         seen.set(code, block.id)
@@ -431,7 +514,3 @@ function buildSeatIndex(venue) {
 }
 
 export const SEAT_INDEX = buildSeatIndex(CONFIG.venue)
-
-export function seatCode(blockId, row, col) {
-  return `${blockId}${row + 1}-${col + 1}`
-}

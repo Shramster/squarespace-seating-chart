@@ -103,7 +103,13 @@ function buildRows(seats, priceByType) {
           '', // Width
           '', // Height
           'Yes',
-          '' // Hosted Image URLs
+          // Same static image for every product — served by the same
+          // whitenoise/STATICFILES_DIRS mechanism as seat-chart.js/.css
+          // (see backend/ticketing_dev/settings.py), copied verbatim from
+          // public/ticket_product_image.jpg by Vite's build (not bundled
+          // through the JS-asset pipeline, which would collide with
+          // seat-chart.jpg — see vite.config.js's assetFileNames).
+          `${CONFIG.apiBase}/static/ticket_product_image.jpg`
         ]
           .map(csvField)
           .join(',')
