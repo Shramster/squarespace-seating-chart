@@ -18,6 +18,7 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink }) {
         <strong className="sc-panel-name">
           <span className={`sc-legend-swatch ${meta.type !== 'ga' ? meta.type : ''}`}></span>
           {seatDisplayName(meta)}
+          {meta.ada && <span className="sc-ada-badge" title="ADA accessible seat">ADA</span>}
         </strong>  <strong>
     ${meta.price}
     </strong>

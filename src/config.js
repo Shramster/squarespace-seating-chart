@@ -17,6 +17,14 @@ const C = (label) => seat('chair', { label })
 const N = (name) => seat('candidate', { label: name })
 const _ = null // no seat here (gap / walkway / non-seat space)
 
+// ADA(seat) marks any seat (from A()/G()/D()/C()/N() above) as
+// ADA-accessible — composes rather than duplicating the 5 constructors
+// above, so it reads clearly in a grid literal (e.g. `ADA(D('UT'))`) and
+// is trivially greppable. See also a block's `adaDefault: true` (used on
+// the two Aisle blocks below, where every seat is ADA) instead of
+// wrapping every single cell.
+const ADA = (seatObj) => ({ ...seatObj, ada: true })
+
 // Each seat is its own Squarespace product (see
 // backend/test_data/generate_show_test_data.mjs), grouped into a
 // per-show-day Category, so every seat gets a real permalink instead of
@@ -37,6 +45,44 @@ export function seatBuyLink(showSku, seatCode) {
 // without re-navigating by hand.
 export function showLink(showSku) {
   return `${CONFIG.squarespaceBase}/${CONFIG.squarespaceProductPage}?show=${showSku}`
+}
+
+// Buyer-facing word for each sellable seat type — shared by the Squarespace
+// product Title (below) and anywhere else in the UI that needs the plain
+// type name rather than a per-seat label (contrast with
+// ticketDescriptions.js's seatDisplayName(), which includes the seat's
+// specific state/candidate).
+export const TYPE_LABEL = {
+  ga: 'Gallery',
+  delegate: 'Delegate',
+  chair: 'Chairperson',
+  candidate: 'Candidate'
+}
+
+// "Saturday, October 3, 3:00 PM" — full day name + full month name, driven
+// off `show.date` so a day-of-week can never drift out of sync with the
+// actual calendar date. Hand-rolled AM/PM (rather than
+// Intl.DateTimeFormat's default "3:00 PM"/"3 PM" — same content here) kept
+// simple since we already need a fixed "H:MM AM/PM" shape.
+export function formatShowDateTime(show) {
+  const d = new Date(show.date)
+  const dayMonth = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  }).format(d)
+  let hours = d.getHours()
+  const minutes = d.getMinutes()
+  const period = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12 || 12
+  const time = `${hours}:${String(minutes).padStart(2, '0')} ${period}`
+  return `${dayMonth}, ${time}`
+}
+
+// Squarespace product Title for one seat: "Saturday, October 3, 3:00 PM,
+// Gallery". Format: Day_of_week, Month Day, Time, Seat-Type.
+export function ticketTitle(show, seat) {
+  return `${formatShowDateTime(show)}, ${TYPE_LABEL[seat.type] ?? seat.type}`
 }
 
 export const CONFIG = {
@@ -77,8 +123,8 @@ export const CONFIG = {
   // Sign-off round: Oct 3 - 4, 2026 only — add the remaining performance
   // dates here once these two are approved.
   shows: [
-    { sku: 'OCT03', label: 'Sat, October 3, 2026' },
-    { sku: 'OCT04', label: 'Sun, October 4, 2026' }
+    { sku: 'OCT03', label: 'Sat, October 3, 2026', date: '2026-10-03T15:00:00' },
+    { sku: 'OCT04', label: 'Sun, October 4, 2026', date: '2026-10-04T15:00:00' }
   ],
 
   // The real room: several distinct seating blocks (some rotated) plus
@@ -110,6 +156,19 @@ export const CONFIG = {
       // furniture gap (row 6) between the upper and lower halves.
       {
         id: 'BLEACHERS-BACK', name: 'Back Bleachers',
+        previewGroup: 'BACK-BLEACHERS',
+        // The axis the user calls "row" here is the seat-position-within-
+        // a-grid-row axis (A-D), and "column" is the grid-row axis
+        // (1-11) — the opposite of every other block's preview
+        // convention, where letter=grid-row/number=position. The seat
+        // code itself is still always "<LETTER><NUMBER>" — only which
+        // grid axis supplies which symbol changes. previewReverseLetters
+        // additionally reverses A-D to D-A along that letter axis.
+        // previewReverseNumbers is the equivalent flip for the number
+        // axis (1..11 becomes 11..1) — toggle to try either direction.
+        previewSwapRowCol: true,
+        previewReverseLetters: true,
+        previewReverseNumbers: true,
         x: 390, y: 500, rotation: -90,
         labelPos: 'top',
         cellSize: 32, gap: 6,
@@ -132,6 +191,8 @@ export const CONFIG = {
       // (col index 2 stays empty except for one front-row seat).
       {
         id: 'BLEACHERS-LEFT', name: 'Left Bleachers',
+        previewGroup: 'LEFT-BLEACHERS',
+        previewRowLetters: ['D', 'C', 'B', 'A'],
         labelPos: 'top',
         x: 43, y: 486.5, rotation: -90,
         cellSize: 32, gap: 6,
@@ -143,9 +204,17 @@ export const CONFIG = {
         ]
       },
 
-      // Left Aisle — freestanding block below Left Bleachers.
+      // Left Aisle — freestanding block below Left Bleachers. Ground-floor,
+      // no stairs — every seat here is ADA-accessible (adaDefault below
+      // applies to every non-null cell rather than wrapping each one).
       {
         id: 'AISLE-LEFT', name: 'Left Aisle',
+        previewGroup: 'LEFT-AISLE',
+        previewReverseLetters: true,
+        previewSwapRowCol: true,
+
+        previewReverseNumbers: true,
+        adaDefault: true,
         labelPos: 'top',
         x: 275, y: 380, rotation: -90,
         cellSize: 32, gap: 6,
@@ -157,14 +226,21 @@ export const CONFIG = {
         ]
       },
 
-      // Right Aisle — separated from Left Aisle by a walkway gap.
+      // Right Aisle — separated from Left Aisle by a walkway gap. Same
+      // ADA rationale as Left Aisle above.
       {
         id: 'AISLE-RIGHT', name: 'Right Aisle',
+        previewGroup: 'RIGHT-AISLE',
+        previewReverseLetters: true,
+        previewSwapRowCol: true,
+
+        previewReverseNumbers: true,
+        adaDefault: true,
         labelPos: 'top',
         x: 490, y: 380, rotation: -90,
         cellSize: 32, gap: 6,
         grid: [
-          [C('MD'), A(), D('NY'), _],
+          [C('MD'), A(), D('NY'), A()],
           [G(), G(), D('NY'), D('NY')],
           [G(), C('NJ'), C('VT'), A()],
           [C('NH'), D('MA'), A(), A()]
@@ -175,6 +251,12 @@ export const CONFIG = {
       // isolated far-right column (col index 5, only rows 1 and 4).
       {
         id: 'BLEACHERS-RIGHT', name: 'Right Bleachers',
+        previewGroup: 'RIGHT-BLEACHERS',
+        previewRowLetters: ['A', 'B', 'C', 'D', 'E'],
+        previewReverseNumbers: true,
+        // The front-seat satellite block below already owns A1 and B1, so
+        // this block's numbers start at 2 instead of 1 to avoid colliding.
+        previewNumbersStart: 2,
         labelOffsetY: -42,
         labelPos: 'top',
         x: 693, y: 486.5, rotation: -90,
@@ -188,11 +270,16 @@ export const CONFIG = {
       },
       {
         id: 'BLEACHERS-RIGHT-FRONT', name: 'Right Bleacher — Floor Seats',
+        previewGroup: 'RIGHT-BLEACHERS',
+        previewRowLetters: ['A'],
+        previewSwapRowCol: true,
         x: 711, y: 416.5, rotation: 0,
         cellSize: 32, gap: 10,
         showFrame: false, // no section border/label — just 3 loose seats
+        // ga seat is ADA-accessible (front/floor row, no stairs); the
+        // actor seat isn't sold, so ADA-marking it is moot.
         grid: [
-          [G(), A()]
+          [ADA(G()), A()]
         ]
       },
 
@@ -201,6 +288,12 @@ export const CONFIG = {
       // sit in front of its platform in the reference chart.
       {
         id: 'STAGE-LEFT', name: 'Left Stage',
+        previewGroup: 'LEFT-STAGE',
+        previewRowLetters: ['B', 'C', 'D', 'E'],
+        previewSwapRowCol: true,
+        // The front-seat satellite block below already owns letter 'A',
+        // so this block's (swapped) letter axis starts at 'B' instead.
+        previewLetterStart: 'B',
         labelPos: 'top',
         labelOffsetX: -25,
         labelOffsetY: 45,
@@ -219,15 +312,20 @@ export const CONFIG = {
       },
       {
         id: 'STAGE-LEFT-FRONT', name: 'Left Stage — Front Seats',
+        previewGroup: 'LEFT-STAGE',
+        previewRowLetters: ['A'],
         x: 203, y: 216.5, rotation: -30,
         cellSize: 32, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
+        // Front/floor row, no stairs — ADA-accessible.
         grid: [
-          [C('CZ'), D('UT'), G()]
+          [ADA(C('CZ')),  ADA(G()), ADA(D('UT'))]
         ]
       },
       {
         id: 'STAGE-CENTER', name: 'Center Stage',
+        previewGroup: 'CENTER-STAGE',
+        previewSwapRowCol: true,
         labelPos: 'top',
         x: 419, y: 41.5, rotation: -90,
         cellSize: 34, gap: 6,
@@ -262,6 +360,9 @@ export const CONFIG = {
       // left-to-right while staying visually aligned to the seating rows.
       {
         id: 'STAGE-RIGHT', name: 'Right \n Stage',
+        previewGroup: 'RIGHT-STAGE',
+        previewRowLetters: ['B', 'C'],
+        previewReverseNumbers: true,
         labelPos: 'top',
         labelOffsetX: 40,
         labelOffsetY: 57,
@@ -275,11 +376,15 @@ export const CONFIG = {
       },
       {
         id: 'STAGE-RIGHT-FRONT', name: 'Right Stage — Front Seats',
+        previewGroup: 'RIGHT-STAGE',
+        previewReverseNumbers: true,
+        previewRowLetters: ['A'],
         x: 567, y: 209.5, rotation: -145,
         cellSize: 32, gap: 18,
         showFrame: false, // no section border/label — just 3 loose seats
+        // Front/floor row, no stairs — ADA-accessible.
         grid: [
-          [G(), N('RAY'), D('SEC')]
+          [ADA(G()), ADA(N('RAY')), ADA(D('SEC'))]
         ]
       }
     ]
@@ -315,7 +420,10 @@ function buildSeatIndex(venue) {
         // Delegate seats display their state code; every other seat's
         // display label is just its code (already friendly/unique).
         const label = cell.label || code
-        index.set(code, { ...cell, label, code })
+        // adaDefault (e.g. the Aisle blocks, where every seat is
+        // ADA-accessible) applies unless a cell already opted in itself.
+        const ada = cell.ada || Boolean(block.adaDefault)
+        index.set(code, { ...cell, label, code, ada })
       })
     })
   }

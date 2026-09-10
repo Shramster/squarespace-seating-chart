@@ -35,6 +35,13 @@ function starTipAngle(rotationDeg) {
   return -Math.PI / 2 - (rotationDeg * Math.PI) / 180
 }
 
+// 1 -> start, 2 -> next letter after start, ... for previewSwapRowCol
+// below. `start` defaults to 'A'; a block's previewLetterStart overrides
+// it (e.g. 'B' when a neighboring satellite block already owns 'A').
+function numToLetter(n, start = 'A') {
+  return String.fromCharCode(start.charCodeAt(0) - 1 + n)
+}
+
 function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
   const pitch = block.cellSize + block.gap
   const cols = Math.max(...block.grid.map((row) => row.length))
@@ -110,9 +117,48 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
           </>
         )}
 
-      {block.grid.map((row, r) =>
-        row.map((cell, c) => {
+      {block.grid.map((row, r) => {
+        // Preview-only row/column label (previewGroup/previewRowLetters in
+        // config.js) — sequential 1-indexed count of real seats in this
+        // row, skipping gaps. Purely additive/visual: `code` below (which
+        // drives selection, holds, and sold-seat matching) is completely
+        // unaffected by this. Always renders as "<LETTER><NUMBER>" (same
+        // order as the real seat codes elsewhere), but WHICH grid axis
+        // supplies the letter vs. the number can differ per block:
+        // by default the grid ROW is the letter and position-within-row
+        // is the number (e.g. "C3" — row C, 3rd seat); a block with
+        // previewSwapRowCol: true flips that — position-within-row
+        // becomes the letter and the grid ROW becomes the number instead
+        // (e.g. "C3" now means column C, row 3) — because for some blocks
+        // (e.g. Back Bleachers) the axis the user thinks of as "row" is
+        // actually stored as the grid's column axis. previewReverseLetters
+        // additionally reverses the letter sequence along whichever axis
+        // is currently supplying it (A-D becomes D-A), and previewLetterStart
+        // shifts where that sequence begins (e.g. 'B' instead of 'A', when
+        // a neighboring satellite block already owns 'A'). previewReverseNumbers
+        // is the equivalent flip for the NUMBER axis — 1..N becomes N..1 —
+        // and previewNumbersStart is the equivalent shift-of-origin for
+        // numbers (e.g. starting at 2 instead of 1, when a neighboring
+        // satellite block already owns number 1). Both work in either mode:
+        // they apply to the grid-row axis when previewSwapRowCol is set, or
+        // the position-within-row axis otherwise (whichever axis is
+        // currently supplying the number). None of this touches the grid
+        // itself or seatCode().
+        const rowSeatCount = row.filter(Boolean).length
+        const numberStart = block.previewNumbersStart || 1
+        let previewNum = 0
+        return row.map((cell, c) => {
           if (!cell) return null
+          previewNum += 1
+          let previewLabel = null
+          if (block.previewSwapRowCol) {
+            const letterPos = block.previewReverseLetters ? rowSeatCount - previewNum + 1 : previewNum
+            const numberPos = (block.previewReverseNumbers ? block.grid.length - r : r + 1) + numberStart - 1
+            previewLabel = `${numToLetter(letterPos, block.previewLetterStart || 'A')}${numberPos}`
+          } else if (block.previewRowLetters) {
+            const numberPos = (block.previewReverseNumbers ? rowSeatCount - previewNum + 1 : previewNum) + numberStart - 1
+            previewLabel = `${block.previewRowLetters[r]}${numberPos}`
+          }
           const code = seatCode(block.id, r, c)
           const isSelected = selected === code
           const sold = soldSeats.includes(code)
@@ -159,6 +205,16 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
               }}
             >
               <circle cx={seatX} cy={seatY} r={radius} />
+              {previewLabel && (
+                <text
+                  className="sc-seat-preview-label"
+                  x={seatX}
+                  y={seatY}
+                  transform={block.rotation ? `rotate(${-block.rotation} ${seatX} ${seatY})` : undefined}
+                >
+                  {previewLabel}
+                </text>
+              )}
               {isSelected && (
                 <polygon
                   className="sc-seat-star"
@@ -174,7 +230,7 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
             </g>
           )
         })
-      )}
+      })}
       </g>
       {sideLabel && (
         <text

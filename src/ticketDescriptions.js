@@ -23,17 +23,17 @@ export const TICKET_DESCRIPTIONS = {
     TN: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Tennessee and one meal ticket ($5 value).",
     KY: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Kentucky and one meal ticket ($5 value).",
     MO: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Missouri and one meal ticket ($5 value).",
-    VA: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Virginia and one meal ticket ($5 value). This is an ADA accessible seat.",
-    MS: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Mississippi and one meal ticket ($5 value). This is an ADA accessible seat.",
-    SC: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of South Carolina and one meal ticket ($5 value). This is an ADA accessible seat.",
-    UT: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Utah and one meal ticket ($5 value). This is an ADA accessible seat.",
+    VA: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Virginia and one meal ticket ($5 value).",
+    MS: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Mississippi and one meal ticket ($5 value).",
+    SC: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of South Carolina and one meal ticket ($5 value).",
+    UT: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Utah and one meal ticket ($5 value).",
     MI: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Michigan and one meal ticket ($5 value).",
     ND: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of North Dakota and one meal ticket ($5 value).",
     IA: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Iowa and one meal ticket ($5 value).",
     MN: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Minnesota and one meal ticket ($5 value).",
-    NY: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of New York and one meal ticket ($5 value). This is an ADA accessible seat.",
-    SEC: "You are a key player in the decision of the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button as Assistant to the Secretary and one meal ticket ($5 value). This is an ADA accessible seat.",
-    MA: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Massachusetts and one meal ticket ($5 value). This is an ADA accessible seat.",
+    NY: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of New York and one meal ticket ($5 value).",
+    SEC: "You are a key player in the decision of the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button as Assistant to the Secretary and one meal ticket ($5 value).",
+    MA: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Massachusetts and one meal ticket ($5 value).",
     CA: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of California and one meal ticket ($5 value).",
     FL: "You are a key player in the decision of your territory at the '44 DNC. You will be sat next to an actor, cast a vote by paper ballot, receive a commemorative button of Florida and one meal ticket ($5 value)."
   },
@@ -44,18 +44,18 @@ export const TICKET_DESCRIPTIONS = {
     PH: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of the Philippines, two meal tickets ($10 value), and speaking lines in Act 2.",
     VIR: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of the Virgin Islands, two meal tickets ($10 value), and speaking lines in Act 2.",
     HI: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Hawaii, two meal tickets ($10 value), and speaking lines in Act 2.",
-    WV: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of West Virginia, two meal tickets ($10 value), and speaking lines in Act 2. This is an ADA accessible seat.",
-    TX: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Texas, two meal tickets ($10 value), and speaking lines in Act 2. This is an ADA accessible seat.",
-    CZ: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of the Canal Zone, two meal tickets ($10 value), and speaking lines in Act 2. This is an ADA accessible seat.",
+    WV: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of West Virginia, two meal tickets ($10 value), and speaking lines in Act 2.",
+    TX: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Texas, two meal tickets ($10 value), and speaking lines in Act 2.",
+    CZ: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of the Canal Zone, two meal tickets ($10 value), and speaking lines in Act 2.",
     NV: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Nevada, two meal tickets ($10 value), and speaking lines in Act 2.",
     NM: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of New Mexico, two meal tickets ($10 value), and speaking lines in Act 2.",
     MT: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Montana, two meal tickets ($10 value), and speaking lines in Act 2.",
     WI: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Wisconsin, two meal tickets ($10 value), and speaking lines in Act 2.",
-    MD: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Maryland, two meal tickets ($10 value), and speaking lines in both Act 1 and 2. This is an ADA accessible seat.",
+    MD: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Maryland, two meal tickets ($10 value), and speaking lines in both Act 1 and 2.",
     MN: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Minnesota, two meal tickets ($10 value), and speaking lines in Act 2.",
-    NJ: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of New Jersey, two meal tickets ($10 value), and speaking lines in Act 2. This is an ADA accessible seat.",
-    VT: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Vermont, two meal tickets ($10 value), and speaking lines in Act 2. This is an ADA accessible seat.",
-    NH: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of New Hampshire, two meal tickets ($10 value), and speaking lines in Act 2. This is an ADA accessible seat.",
+    NJ: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of New Jersey, two meal tickets ($10 value), and speaking lines in Act 2.",
+    VT: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Vermont, two meal tickets ($10 value), and speaking lines in Act 2.",
+    NH: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of New Hampshire, two meal tickets ($10 value), and speaking lines in Act 2.",
     OR: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Oregon, two meal tickets ($10 value), and speaking lines in Act 2.",
     RI: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Rhode Island, two meal tickets ($10 value), and speaking lines in Act 2.",
     WA: "You will be called to speak on behalf of your delegation. You'll also cast your own vote by paper ballot, receive a commemorative button of Washington, two meal tickets ($10 value), and speaking lines in Act 2."
@@ -63,9 +63,9 @@ export const TICKET_DESCRIPTIONS = {
 
   candidate: {
     MUR: "You are the talk of the moment! You are Frank Murphy (Supreme Court Justice), one of the delegates vying for the VP Nomination at the '44 DNC. Accompanied by an esteemed member of the Convention cast, you will be guided through a personalized journey toward your bid against the Democratic hopeful Henry A. Wallace. You will not be required to speak to the Convention at large, but will be encouraged to speak to members of the cast swirling around you. You will cast a vote by paper ballot, receive two meal tickets ($10 value), a Convention tee-shirt, and a commemorative photo.",
-    BR: "You are the talk of the moment! You are Melville Broughton (North Carolina Governor), one of the delegates vying for the VP Nomination at the '44 DNC. Accompanied by an esteemed member of the Convention cast, you will be guided through a personalized journey toward your bid against the Democratic hopeful Henry A. Wallace. You will not be required to speak to the Convention at large, but will be encouraged to speak to members of the cast swirling around you. You will cast a vote by paper ballot, receive two meal tickets ($10 value), a Convention tee-shirt, and a commemorative photo. This is an ADA accessible seat.",
+    BR: "You are the talk of the moment! You are Melville Broughton (North Carolina Governor), one of the delegates vying for the VP Nomination at the '44 DNC. Accompanied by an esteemed member of the Convention cast, you will be guided through a personalized journey toward your bid against the Democratic hopeful Henry A. Wallace. You will not be required to speak to the Convention at large, but will be encouraged to speak to members of the cast swirling around you. You will cast a vote by paper ballot, receive two meal tickets ($10 value), a Convention tee-shirt, and a commemorative photo.",
     MC: "You are the talk of the moment! You are Paul Voris McNutt (High Commissioner of the Philippines), one of the delegates vying for the VP Nomination at the '44 DNC. Accompanied by an esteemed member of the Convention cast, you will be guided through a personalized journey toward your bid against the Democratic hopeful Henry A. Wallace. You will not be required to speak to the Convention at large, but will be encouraged to speak to members of the cast swirling around you. You will cast a vote by paper ballot, receive two meal tickets ($10 value), a Convention tee-shirt, and a commemorative photo.",
-    RAY: "You are the talk of the moment! You are Sam Rayburn (Speaker of the House), one of the delegates vying for the VP Nomination at the '44 DNC. Accompanied by an esteemed member of the Convention cast, you will be guided through a personalized journey toward your bid against the Democratic hopeful Henry A. Wallace. You will not be required to speak to the Convention at large, but will be encouraged to speak to members of the cast swirling around you. You will cast a vote by paper ballot, receive two meal tickets ($10 value), a Convention tee-shirt, and a commemorative photo. This is an ADA accessible seat.",
+    RAY: "You are the talk of the moment! You are Sam Rayburn (Speaker of the House), one of the delegates vying for the VP Nomination at the '44 DNC. Accompanied by an esteemed member of the Convention cast, you will be guided through a personalized journey toward your bid against the Democratic hopeful Henry A. Wallace. You will not be required to speak to the Convention at large, but will be encouraged to speak to members of the cast swirling around you. You will cast a vote by paper ballot, receive two meal tickets ($10 value), a Convention tee-shirt, and a commemorative photo.",
     LU: "You are the talk of the moment! You are Scott Lucas (Senator of Illinois), one of the delegates vying for the VP Nomination at the '44 DNC. Accompanied by an esteemed member of the Convention cast, you will be guided through a personalized journey toward your bid against the Democratic hopeful Henry A. Wallace. You will not be required to speak to the Convention at large, but will be encouraged to speak to members of the cast swirling around you. You will cast a vote by paper ballot, receive two meal tickets ($10 value), a Convention tee-shirt, and a commemorative photo."
   }
 }
@@ -125,10 +125,21 @@ const CANDIDATE_NAMES = {
   LU: 'Scott Lucas'
 }
 
+// Appended whenever a seat's `ada` field (set in config.js, either per-seat
+// via ADA() or per-block via `adaDefault`) is true — this is the single
+// source of truth for ADA-ness, rather than hand-maintaining the sentence
+// per label here.
+const ADA_SENTENCE = ' This is an ADA accessible seat.'
+
 // Looks up the description for a sellable seat, falling back to a generic
 // line (rather than throwing) if a future venue change adds a label this
 // table doesn't yet have an entry for.
 export function ticketDescription(seat) {
+  const base = describeSeat(seat)
+  return seat.ada ? `${base}${ADA_SENTENCE}` : base
+}
+
+function describeSeat(seat) {
   if (seat.type === 'ga') return TICKET_DESCRIPTIONS.ga
   const byLabel = TICKET_DESCRIPTIONS[seat.type]
   const desc = byLabel?.[seat.label]
