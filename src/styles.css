@@ -405,10 +405,6 @@
   border: 1px solid var(--border);
   border-radius: 4px;
   background: rgba(27, 160, 243, 0.06);
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -416,11 +412,15 @@
   flex-wrap: wrap;
 }
 .sc-panel-text {
-  font-size: 1.125em;
+  font-size: 1em;
   color: var(--ink);
   line-height: 1.5;
 }
 .sc-panel-text strong {
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: var(--navy);
   font-size: 1.5em;
 }
