@@ -410,8 +410,24 @@ password-protected page at `/seating-chart` with a Code Block:
 ```html
 <div id="seat-chart-root"></div>
 <link rel="stylesheet" href="https://seatchart.swseng.io/static/seat-chart.css">
-<script src="https://seatchart.swseng.io/static/seat-chart.js"></script>
+<script type="module" defer src="https://seatchart.swseng.io/static/seat-chart.js"></script>
 ```
+**The `type="module"` matters — don't drop it on a future re-embed.**
+Without it, our bundle runs as a classic script sharing Squarespace's own
+global scope (no `type="module"` boundary), and since Vite's output
+declares many top-level `const`/`let` bindings, an identifier collision
+with one of Squarespace's own same-page scripts can silently break their
+YUI bootstrap (`window.Y` never gets `.Global` populated) — symptom:
+`Error initializing QuickView TypeError: Cannot read properties of
+undefined (reading 'on')` in the console, and the site's own floating
+cart icon staying hidden (`.floating-cart` never loses its `hidden`
+class) even with items in the cart. Confirmed via a byte-for-byte A/B
+test on this exact page — reproducible with a plain `<script src>`,
+gone with `type="module"` added (our bundle has no external
+`import`/`export`, so it's safe to load as a self-contained module).
+`defer` alone does not fix it — the fix is specifically the module
+scope isolation, not load timing.
+
 Before bulk-importing, confirm `CONFIG.squarespaceProductPage` in
 `src/config.js` matches the slug of that site's actual Store page (this
 site's is `tickets`) — an empty/wrong value fails the *entire* bulk
