@@ -15,6 +15,7 @@
   --seat-unavailable: #c8c8c8;
   --furniture-fill: #14171a;
   --star: #22d3ee;
+  --held: #d69e2e;
 
   box-sizing: border-box;
   max-width: 960px;
@@ -318,6 +319,13 @@
   cursor: not-allowed;
 }
 
+.sc-seat.sc-held circle {
+  fill: rgba(214, 158, 46, 0.15);
+  stroke: var(--held);
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
 .sc-seat.sc-actor circle {
   fill: var(--seat-unavailable);
   stroke: var(--seat-unavailable);
@@ -398,6 +406,10 @@
   background: var(--seat-unavailable);
   border-color: var(--seat-unavailable);
 }
+.sc-legend-swatch.held {
+  background: rgba(214, 158, 46, 0.15);
+  border-color: var(--held);
+}
 
 .sc-panel {
   margin-top: 28px;
@@ -456,6 +468,13 @@
   color: var(--ink-dim);
   font-size: 0.6875em;
   letter-spacing: 0.03em;
+}
+.sc-panel-error {
+  color: #b7231d;
+  font-size: 0.75em;
+  font-weight: 700;
+  flex-basis: 100%;
+  text-align: right;
 }
 .sc-reserve-btn {
   font-family:

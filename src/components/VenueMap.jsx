@@ -35,7 +35,7 @@ function starTipAngle(rotationDeg) {
   return -Math.PI / 2 - (rotationDeg * Math.PI) / 180
 }
 
-function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
+function SeatBlock({ block, soldSeats, heldSeats, selected, onSelectSeat }) {
   const pitch = block.cellSize + block.gap
   const cols = Math.max(...block.grid.map((row) => row.length))
   const width = cols * pitch - block.gap
@@ -120,7 +120,8 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
           const shortLabel = code.slice(block.previewGroup.length + 1)
           const isSelected = selected === code
           const sold = soldSeats.includes(code)
-          const disabled = sold || cell.type === 'actor'
+          const held = !isSelected && heldSeats.includes(code)
+          const disabled = sold || held || cell.type === 'actor'
           const seatX = block.x + c * pitch + block.cellSize / 2
           const seatY = block.y + r * pitch + block.cellSize / 2
           const radius = block.cellSize / 2
@@ -129,6 +130,7 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
             'sc-seat',
             `sc-${cell.type}`,
             sold && 'sc-sold',
+            held && 'sc-held',
             isSelected && 'sc-selected'
           ]
             .filter(Boolean)
@@ -139,7 +141,9 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
               ? 'reserved for cast'
               : sold
                 ? 'sold'
-                : 'available'
+                : held
+                  ? 'reserved by another buyer'
+                  : 'available'
 
           function activate() {
             if (disabled) return
@@ -209,7 +213,7 @@ function SeatBlock({ block, soldSeats, selected, onSelectSeat }) {
   )
 }
 
-export default function VenueMap({ venue, soldSeats, selected, onSelectSeat }) {
+export default function VenueMap({ venue, soldSeats, heldSeats, selected, onSelectSeat }) {
   return (
     <div className="sc-venue-wrap" style={{ '--venue-w': venue.width, '--venue-h': venue.height }}>
       <svg
@@ -229,6 +233,7 @@ export default function VenueMap({ venue, soldSeats, selected, onSelectSeat }) {
               key={block.id}
               block={block}
               soldSeats={soldSeats}
+              heldSeats={heldSeats}
               selected={selected}
               onSelectSeat={onSelectSeat}
             />

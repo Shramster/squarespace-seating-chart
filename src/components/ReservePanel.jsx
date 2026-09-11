@@ -1,6 +1,14 @@
 import { seatDisplayName, ticketDescription } from '../ticketDescriptions.js'
 
-export default function ReservePanel({ selected, meta, seatSku, buyLink }) {
+export default function ReservePanel({
+  selected,
+  meta,
+  seatSku,
+  buyLink,
+  holdState,
+  holdError,
+  onReserve
+}) {
   if (!selected) {
     return (
       <div className="sc-panel">
@@ -28,13 +36,28 @@ export default function ReservePanel({ selected, meta, seatSku, buyLink }) {
         <span className="sc-panel-description">{ticketDescription(meta)}</span>
         <br />
         <br />
-        Checkout continues in a new tab.
+        {holdState === 'held' ? (
+          <>Reserved for the next few minutes — finish checkout in the tab that opened.</>
+        ) : (
+          <>Reserving opens checkout in a new tab.</>
+        )}
       </div>
-    <div style={{ display: "flex", justifyContent: 'flex-end', width: "100%"}}>
-
-      <a className="sc-reserve-btn" href={buyLink}>
-        Reserve this seat
-      </a>
+    <div style={{ display: "flex", justifyContent: 'flex-end', width: "100%", alignItems: 'center'}}>
+      {holdState === 'error' && <span className="sc-panel-error">{holdError}</span>}
+      {holdState === 'held' ? (
+        <a className="sc-reserve-btn" href={buyLink} target="_blank" rel="noopener noreferrer">
+          Reopen checkout
+        </a>
+      ) : (
+        <button
+          type="button"
+          className="sc-reserve-btn"
+          onClick={onReserve}
+          disabled={holdState === 'holding'}
+        >
+          {holdState === 'holding' ? 'Reserving…' : 'Reserve this seat'}
+        </button>
+      )}
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import logging
 
 from django.utils import timezone
 
-from .models import SeatSale, SeatSkuMap
+from .models import SeatHold, SeatSale, SeatSkuMap
 
 logger = logging.getLogger("ticketing")
 
@@ -45,3 +45,4 @@ def sync_order(order):
                 "seat_code": seat_map.seat_code,
             },
         )
+        SeatHold.objects.filter(show=seat_map.show, seat_code=seat_map.seat_code).delete()

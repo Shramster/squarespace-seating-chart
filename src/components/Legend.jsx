@@ -1,13 +1,10 @@
-import { CONFIG } from '../config.js'
-
 export default function Legend() {
-  const { ga, delegate, chair, candidate } = CONFIG.pricesByType
   return (
     <div className="sc-legend">
-      <span className="sc-legend-item"><span className="sc-legend-swatch"></span>Gallery (${ga})</span>
-      <span className="sc-legend-item"><span className="sc-legend-swatch delegate"></span>Delegate (${delegate})</span>
-      <span className="sc-legend-item"><span className="sc-legend-swatch chair"></span>Chairperson (${chair})</span>
-      <span className="sc-legend-item"><span className="sc-legend-swatch candidate"></span>Candidate (${candidate})</span>
+      <span className="sc-legend-item"><span className="sc-legend-swatch"></span>Gallery</span>
+      <span className="sc-legend-item"><span className="sc-legend-swatch delegate"></span>Delegate</span>
+      <span className="sc-legend-item"><span className="sc-legend-swatch chair"></span>Chairperson</span>
+      <span className="sc-legend-item"><span className="sc-legend-swatch candidate"></span>Candidate</span>
       <span className="sc-legend-item">
         <span className="sc-legend-swatch gold">
           <svg viewBox="0 0 14 14" className="sc-legend-star">
@@ -16,6 +13,7 @@ export default function Legend() {
         </span>
         Selection
       </span>
+      <span className="sc-legend-item"><span className="sc-legend-swatch held"></span>Reserved</span>
       <span className="sc-legend-item"><span className="sc-legend-swatch actor"></span>Unavailable</span>
     </div>
   )

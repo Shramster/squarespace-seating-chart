@@ -37,6 +37,16 @@ page.
   Squarespace's own `Stock: 1` set per seat-product by the CSV generator,
   which blocks a second purchase at checkout regardless of hold state or
   expiry.
+- **Squarespace's own cart timer (manual, account-level — not code):**
+  separately from this app's `SeatHold`, Squarespace Commerce has its own
+  built-in abandoned-cart inventory-hold behavior on some plan tiers,
+  which can release/re-list an item added to a buyer's cart after a set
+  window. If the goal is a matching ~10-minute hold on Squarespace's own
+  side (on top of, or instead of, the in-app `SeatHold`), that requires
+  checking/upgrading the site's Commerce plan in Squarespace's own
+  account settings — this is a billing/account action outside this repo,
+  nothing here can change it. Verify current plan tier and cart-timer
+  behavior directly in the Squarespace admin before assuming it's active.
 
 ## 3. Generating & testing the catalog CSV locally
 

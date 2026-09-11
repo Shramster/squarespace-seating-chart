@@ -11,6 +11,7 @@ const POLL_INTERVAL_MS = 15000
  */
 export function useSeatStatus(apiBase, sku) {
   const [soldSeats, setSoldSeats] = useState([])
+  const [heldSeats, setHeldSeats] = useState([])
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'error'
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export function useSeatStatus(apiBase, sku) {
         .then((data) => {
           if (cancelled) return
           setSoldSeats(data.soldSeats || [])
+          setHeldSeats(data.heldSeats || [])
           setStatus('ready')
         })
         .catch(() => {
@@ -37,6 +39,7 @@ export function useSeatStatus(apiBase, sku) {
             // the last known-good sold-seat list instead of flashing an
             // error every 15s.
             setSoldSeats([])
+            setHeldSeats([])
             setStatus('error')
           }
         })
@@ -51,5 +54,5 @@ export function useSeatStatus(apiBase, sku) {
     }
   }, [apiBase, sku])
 
-  return { soldSeats, status }
+  return { soldSeats, heldSeats, status }
 }

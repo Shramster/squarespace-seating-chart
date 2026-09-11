@@ -89,9 +89,10 @@ export function formatShowDateTime(show) {
 }
 
 // Squarespace product Title for one seat: "Saturday, October 3 @ 3pm,
-// Gallery". Format: Day_of_week, Month Day @ Time, Seat-Type.
+// Gallery — LEFT-BLEACHERS-B3". Format: Day_of_week, Month Day @ Time,
+// Seat-Type — <GROUP>-<ROW><COLUMN>.
 export function ticketTitle(show, seat) {
-  return `${formatShowDateTime(show)}, ${TYPE_LABEL[seat.type] ?? seat.type}`
+  return `${formatShowDateTime(show)}, ${TYPE_LABEL[seat.type] ?? seat.type} — ${seat.code}`
 }
 
 // "1st"/"2nd"/"3rd"/"4th"... for formatShowLabel below.
