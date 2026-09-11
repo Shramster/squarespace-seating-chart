@@ -54,7 +54,7 @@ export default function App() {
       if (!res.ok) throw new Error(`bad response: ${res.status}`)
       setHoldState('held')
       setLocalHolds((prev) => [...prev, selected])
-      window.open(seatBuyLink(activeShow.sku, selected), '_blank', 'noopener,noreferrer')
+      window.location.href = seatBuyLink(activeShow.sku, selected)
     } catch {
       setHoldState('error')
       setHoldError("Couldn't reserve that seat — check your connection and try again.")

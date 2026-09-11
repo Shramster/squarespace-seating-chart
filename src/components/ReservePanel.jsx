@@ -37,16 +37,16 @@ export default function ReservePanel({
         <br />
         <br />
         {holdState === 'held' ? (
-          <>Reserved for the next few minutes — finish checkout in the tab that opened.</>
+          <>Reserved for the next few minutes — continue to checkout.</>
         ) : (
-          <>Reserving opens checkout in a new tab.</>
+          <>Reserving takes you to checkout.</>
         )}
       </div>
     <div style={{ display: "flex", justifyContent: 'flex-end', width: "100%", alignItems: 'center'}}>
       {holdState === 'error' && <span className="sc-panel-error">{holdError}</span>}
       {holdState === 'held' ? (
-        <a className="sc-reserve-btn" href={buyLink} target="_blank" rel="noopener noreferrer">
-          Reopen checkout
+        <a className="sc-reserve-btn" href={buyLink}>
+          Continue to checkout
         </a>
       ) : (
         <button
