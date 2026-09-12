@@ -443,7 +443,7 @@
 }
 .sc-panel-name {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
 }
 .sc-ada-badge {
