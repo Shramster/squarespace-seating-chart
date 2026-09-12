@@ -21,8 +21,8 @@ product_import-OCT03-full-catalog.csv
 # src/config.js, so not worth tracking/diffing in git.
 backend/test_data/product_import-shows.csv
 backend/test_data/product_import-test-subset.csv
-backend/test_data/product_import-oct03.csv
-backend/test_data/product_import-oct04.csv
+backend/test_data/product_import-oct*.csv
+backend/test_data/product_import-nov*.csv
 
 # Local dev fixture scraped from the real production page (password-
 # protected) — a snapshot of Squarespace's own template markup, not

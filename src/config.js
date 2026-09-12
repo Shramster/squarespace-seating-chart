@@ -128,13 +128,22 @@ export function formatShowLabel(show) {
 // the catalog generator still uses ALL_SHOWS, so an inactive date's
 // per-show CSV stays available to import whenever it's ready.
 //
-// Sign-off round: Oct 3 - 4, 2026 only — add the remaining performance
-// dates here once these two are approved.
+// Full run announced 2026-09-12; approved and gone live 2026-09-12 — all
+// 13 dates below are active/buyer-facing.
 const SHOW_DATES = [
   { sku: 'OCT03', date: '2026-10-03T15:00:00' },
-  // Not yet on sale — catalog isn't posted to Squarespace yet. Remove
-  // `active: false` once it's ready to show up for buyers.
-  { sku: 'OCT04', date: '2026-10-04T15:00:00', active: false }
+  { sku: 'OCT04', date: '2026-10-04T15:00:00' },
+  { sku: 'OCT09', date: '2026-10-09T20:00:00' },
+  { sku: 'OCT10', date: '2026-10-10T15:00:00' },
+  { sku: 'OCT16', date: '2026-10-16T20:00:00' },
+  { sku: 'OCT17', date: '2026-10-17T15:00:00' },
+  { sku: 'OCT18', date: '2026-10-18T15:00:00' },
+  { sku: 'OCT23', date: '2026-10-23T20:00:00' },
+  { sku: 'OCT24', date: '2026-10-24T15:00:00' },
+  { sku: 'OCT25', date: '2026-10-25T15:00:00' },
+  { sku: 'OCT30', date: '2026-10-30T20:00:00' },
+  { sku: 'NOV01', date: '2026-11-01T15:00:00' },
+  { sku: 'NOV03', date: '2026-11-03T19:00:00' }
 ]
 
 // Every configured show, regardless of buyer-facing visibility — the

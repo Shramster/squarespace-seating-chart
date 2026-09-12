@@ -154,6 +154,15 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = ['/dist']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
+# WhiteNoise otherwise only rescans static files when DEBUG is on, so a
+# production redeploy (scp a new dist/, collectstatic) would keep serving
+# the previous process's in-memory file index until the container was
+# restarted. Since these filenames are unhashed (see comment above) and
+# must reflect a fresh build immediately after collectstatic, force
+# per-request rescanning regardless of DEBUG — negligible cost at this
+# app's traffic volume.
+WHITENOISE_AUTOREFRESH = True
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
