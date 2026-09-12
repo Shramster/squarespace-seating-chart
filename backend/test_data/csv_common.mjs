@@ -51,9 +51,10 @@ export function buildRow(show, seat, price) {
     CONFIG.squarespaceProductPage,
     seatProductSlug(show.sku, seat.code),
     ticketTitle(show, seat),
-    // Seat SKU as its own bolded first line, so a buyer/admin can
-    // immediately confirm which exact seat this product is for.
-    `<p><strong>${sku}</strong></p><p>${ticketDescription(seat)}</p><p><a href="${showLink(show.sku)}">&larr; Back to ${show.label}</a></p>`,
+    // Seat code (without the show-date prefix) as its own bolded first
+    // line, so a buyer/admin can immediately confirm which exact seat
+    // this product is for.
+    `<p><strong>Seat: ${seat.code}</strong></p><p>${ticketDescription(seat)}</p><p><a href="${showLink(show.sku)}">&larr; Back to ${show.label}</a></p>`,
     sku,
     '', // GTIN
     '', // MPN
