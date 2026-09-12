@@ -278,10 +278,23 @@ git clone https://github.com/Shramster/squarespace-seating-chart.git ~/seatchart
 ```
 Locally: set `CONFIG.apiBase`'s prod fallback in `src/config.js` to
 `https://seatchart.swseng.io` (it's baked into the bundle at build
-time), then:
+time), then, since `~/seatchart/dist` doesn't exist yet right after the
+clone above:
 ```
 npm run build           # produces dist/seat-chart.js + .css
 scp -r dist deploy@<STAGING_VPS_IP>:~/seatchart/dist
+```
+**This `-r dist ... dist` form only works because the destination
+doesn't exist yet.** On every later redeploy `~/seatchart/dist` already
+exists, and `scp -r dist deploy@host:~/seatchart/dist` silently nests the
+whole local `dist/` folder one level deeper as `~/seatchart/dist/dist/`
+instead of overwriting the files nginx/whitenoise actually serve — the
+deploy looks successful (no error, files land somewhere) but production
+keeps serving the old build indefinitely. Bit us in practice: several
+redeploys in a row silently no-opped this way before it was caught. From
+7g onward, always scp the built files individually instead:
+```
+scp dist/seat-chart.js dist/seat-chart.css deploy@<STAGING_VPS_IP>:~/seatchart/dist/
 ```
 
 **7c. Configure `backend/.env`** (not committed — create fresh on the VPS):
@@ -387,21 +400,34 @@ code change** — Django's `SeatSkuMap` doesn't update itself when
 poller/webhook just logs "No SeatSkuMap entry" and skips the order,
 rather than erroring) rather than loudly.
 
-Redeploying the frontend bundle (`scp` a rebuilt `dist/` + rerun this
-step) needs one more thing whitenoise-side: `collectstatic` builds its
-served-file index once per process, so
-`docker compose exec web python manage.py collectstatic --noinput`
-alone won't make a *running* container serve the new files — follow it
-with `docker compose restart web` (confirm with `curl -s
+**Redeploying the frontend bundle:** rebuild, then `scp` the two built
+files individually — **not** `scp -r dist ...` (see the nesting gotcha in
+7b; `~/seatchart/dist` already exists on every redeploy, so `-r` silently
+buries the new build a directory deeper instead of overwriting anything):
+```
+npm run build
+scp dist/seat-chart.js dist/seat-chart.css deploy@<STAGING_VPS_IP>:~/seatchart/dist/
+docker compose exec web python manage.py collectstatic --noinput
+```
+`backend/ticketing_dev/settings.py` sets `WHITENOISE_AUTOREFRESH = True`
+specifically so `collectstatic` alone is enough here — whitenoise
+otherwise only rescans static files when `DEBUG` is on (`False` in
+production), so it'd keep serving the previous process's in-memory file
+index until the container was restarted. If that setting is ever reverted,
+`docker compose restart web` after `collectstatic` becomes required again
+— and any `docker compose up`/`restart` of `web` **must** include
+`-f docker-compose.production.yml`, since plain `docker compose up -d web`
+(base file only) silently drops it back onto the default Compose network
+and away from `backend_default`/the `seatchart_web` alias that nginx needs
+to reach it (symptom: `502 Bad Gateway` from `seatchart.swseng.io`,
+`docker inspect` on the container shows the wrong network).
+
+Either way, confirm with `curl -s
 https://seatchart.swseng.io/static/seat-chart.js | grep <something from
-the new build>`, not just the response headers, since `Last-Modified`
-can look unchanged too). Also: any `docker compose up`/`restart` of
-`web` **must** include `-f docker-compose.production.yml` — running
-plain `docker compose up -d web` (base file only) silently drops it back
-onto the default Compose network and away from `backend_default`/the
-`seatchart_web` alias, which nginx needs to reach it (symptom: `502 Bad
-Gateway` from `seatchart.swseng.io`, `docker inspect` on the container
-shows the wrong network).
+the new build>` — not just response headers/`Last-Modified`, and not just
+that the `scp`/deploy commands ran without error, since both the stale
+whitenoise index and the `scp -r` nesting bug produce a "successful"-looking
+deploy that still serves the old build.
 
 **7h. Squarespace side.** This has been run against the *real* production
 site (`https://www.conventionplay.com/`, an existing store the team
