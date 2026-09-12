@@ -184,6 +184,10 @@
   .sc-panel-scroll-hint {
     display: inline;
   }
+  .sc-legend {
+    font-size: 0.85em;
+    gap: 10px;
+  }
 }
 
 .sc-wall {
@@ -355,7 +359,7 @@
   width: 100%;
   height: auto;
   min-width: 600px;
-  margin: 16px auto 0;
+  margin: 32px auto 0;
 }
 .sc-legend-item {
   display: flex;
@@ -365,6 +369,7 @@
 .sc-legend-swatch {
   width: 1em;
   height: 1em;
+  flex-shrink: 0;
   border-radius: .5em;
   border: 1.5px solid var(--seat-open-border);
   background: var(--seat-open);
