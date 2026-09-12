@@ -370,43 +370,65 @@
     -apple-system,
     sans-serif;
   font-size: 0.9em;
+  /* Column-by-column tint, left to right — sampled directly from the
+     reference seating-table image (same color runs the full height of
+     a column, header included; it is not a row-by-row stripe). */
+  --price-col-0: #ffffff;
+  --price-col-1: #f5fafe;
+  --price-col-2: #e8f5fe;
+  --price-col-3: #ddf0fe;
+  --price-col-4: #d1ecfd;
+  --price-divider: rgba(26, 158, 243, 0.35);
 }
 .sc-price-table th,
 .sc-price-table td {
   padding: 10px 14px;
   text-align: center;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--price-divider);
   white-space: nowrap;
 }
+.sc-price-table th:nth-child(1),
+.sc-price-table td:nth-child(1) {
+  background: var(--price-col-0);
+}
+.sc-price-table th:nth-child(2),
+.sc-price-table td:nth-child(2) {
+  background: var(--price-col-1);
+}
+.sc-price-table th:nth-child(3),
+.sc-price-table td:nth-child(3) {
+  background: var(--price-col-2);
+}
+.sc-price-table th:nth-child(4),
+.sc-price-table td:nth-child(4) {
+  background: var(--price-col-3);
+}
+.sc-price-table th:nth-child(5),
+.sc-price-table td:nth-child(5) {
+  background: var(--price-col-4);
+}
 .sc-price-table thead th {
-  background: var(--venue-bg);
   color: var(--navy);
   font-weight: 700;
 }
 .sc-price-table-tier {
   display: block;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
 }
 .sc-price-table-price {
   display: block;
   color: var(--blue);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.05em;
   margin-top: 2px;
 }
 .sc-price-table tbody th {
   text-align: left;
-  font-weight: 600;
+  font-weight: 400;
+  letter-spacing: normal;
   color: var(--navy);
   white-space: normal;
-}
-.sc-price-table tbody tr:nth-child(odd),
-.sc-price-table tbody tr:nth-child(odd) th {
-  background: var(--bg);
-}
-.sc-price-table tbody tr:nth-child(even),
-.sc-price-table tbody tr:nth-child(even) th {
-  background: var(--venue-bg);
 }
 .sc-price-table thead th:first-child,
 .sc-price-table tbody th {
@@ -416,8 +438,8 @@
   box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.18);
 }
 .sc-price-table-star {
-  width: 1.1em;
-  height: 1.1em;
+  width: 1.7em;
+  height: 1.7em;
   fill: var(--blue);
   stroke: var(--blue);
   stroke-width: 0.5;
