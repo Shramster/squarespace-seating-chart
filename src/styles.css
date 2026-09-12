@@ -354,12 +354,13 @@
   color: var(--ink-dim);
   flex-wrap: wrap;
 }
+
 .sc-price-table-wrap {
   margin: 32px auto 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  /* border-radius: 12px; */
+  /* border: 1px solid var(--border); */
 }
 .sc-price-table {
   width: 100%;
