@@ -46,7 +46,10 @@ class Command(BaseCommand):
         )
 
         while True:
-            self.poll_once(session, options["lookback_hours"])
+            try:
+                self.poll_once(session, options["lookback_hours"])
+            except requests.exceptions.RequestException as exc:
+                logger.error("Squarespace Orders API request failed: %s", exc)
             if options["once"]:
                 return
             time.sleep(options["interval"])

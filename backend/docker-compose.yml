@@ -21,3 +21,4 @@ services:
       - .:/code
     profiles:
       - poller
+    restart: unless-stopped

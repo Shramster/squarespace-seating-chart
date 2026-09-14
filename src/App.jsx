@@ -32,11 +32,34 @@ export default function App() {
     setHoldError(null)
   }, [selected, activeShow.sku])
 
-  function handleSelectShow(show) {
+  // Shared by an explicit DayTabs pick and a browser back/forward
+  // navigation — both need to reset the in-progress selection/holds for
+  // the show being left, but only the explicit pick should push a new
+  // history entry (popstate already moved history for us).
+  function applyShow(show) {
     setActiveShow(show)
     setSelected(null)
     setLocalHolds([])
   }
+
+  function handleSelectShow(show) {
+    applyShow(show)
+    const url = new URL(window.location.href)
+    url.searchParams.set('show', show.sku)
+    window.history.pushState({ show: show.sku }, '', url)
+  }
+
+  // Keep activeShow in sync with the URL when the buyer uses the
+  // browser's back/forward buttons after switching dates via DayTabs.
+  useEffect(() => {
+    function handlePopState() {
+      const requested = new URLSearchParams(window.location.search).get('show')
+      const show = CONFIG.shows.find((s) => s.sku.toLowerCase() === requested?.toLowerCase())
+      if (show) applyShow(show)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   async function handleReserve() {
     if (!selected) return
