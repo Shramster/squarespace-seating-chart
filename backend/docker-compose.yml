@@ -22,3 +22,14 @@ services:
     profiles:
       - poller
     restart: unless-stopped
+
+  inventory-poller:
+    build: .
+    command: python manage.py poll_squarespace_inventory
+    env_file:
+      - .env
+    volumes:
+      - .:/code
+    profiles:
+      - poller
+    restart: unless-stopped

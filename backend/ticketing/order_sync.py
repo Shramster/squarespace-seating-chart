@@ -10,24 +10,24 @@ logger = logging.getLogger("ticketing")
 def sync_order(order):
     """Upserts/voids SeatSale rows for one Squarespace order. Shared by the
     order webhook view and the Orders-API poller — same order shape either
-    way: `{id, fulfillmentStatus, grandTotal, refundedTotal, lineItems:
-    [{id, sku}]}`.
+    way: `{id, fulfillmentStatus, lineItems: [{id, sku}]}`.
+
+    Only handles order cancellation, not refunds: a refund doesn't
+    necessarily flip fulfillmentStatus, and Squarespace's order payload has
+    no per-line-item refund breakdown, so a partial refund of one seat in a
+    multi-seat order can't be localized here. `poll_squarespace_inventory`
+    (`inventory_sync.py`) is the actual mechanism that releases a seat on
+    refund, by watching each seat's own SKU stock directly — the same stock
+    count that governs whether Squarespace itself will let it be bought
+    again, so it can't drift from what's actually purchasable the way an
+    order-field-based guess could.
     """
     order_id = order.get("id") or order.get("orderId")
     if not order_id:
         logger.warning("Order payload missing id: %s", order)
         return
 
-    # Cancellation and refund are independent on a Squarespace order: a
-    # refund does not necessarily flip fulfillmentStatus to CANCELED, so
-    # both signals must be checked to release a seat. Only a FULL refund
-    # counts — Squarespace flips paymentState to REFUNDED on any partial
-    # refund too (e.g. a post-purchase goodwill discount), which must not
-    # release a seat that's still legitimately sold.
-    grand_total = (order.get("grandTotal") or {}).get("value") or 0
-    refunded_total = (order.get("refundedTotal") or {}).get("value") or 0
-    is_fully_refunded = float(grand_total) > 0 and float(refunded_total) >= float(grand_total)
-    is_voided = order.get("fulfillmentStatus") == "CANCELED" or is_fully_refunded
+    is_cancellation = order.get("fulfillmentStatus") == "CANCELED"
 
     for line_item in order.get("lineItems", []):
         line_item_id = line_item.get("id") or line_item.get("lineItemId")
@@ -40,7 +40,7 @@ def sync_order(order):
             logger.warning("No SeatSkuMap entry for SKU %s (order %s)", sku, order_id)
             continue
 
-        if is_voided:
+        if is_cancellation:
             SeatSale.objects.filter(
                 squarespace_order_id=order_id,
                 squarespace_line_item_id=line_item_id,

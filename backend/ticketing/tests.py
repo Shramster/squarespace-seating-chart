@@ -10,6 +10,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from .inventory_sync import sync_inventory
 from .models import SeatHold, SeatSale, SeatSkuMap, Show
 
 TEST_SECRET_HEX = "deadbeef" * 8  # 32 bytes, hex-encoded
@@ -109,53 +110,53 @@ class TicketingTests(TestCase):
         res = self.client.get(self.seats_url)
         self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
 
-    def test_webhook_full_refund_without_cancellation_voids_seat_sale(self):
+    def test_inventory_sync_releases_restocked_seat(self):
         SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
-        sale_payload = {
-            "topic": "order.create",
-            "data": {"id": "order-4", "lineItems": [{"id": "li-4", "sku": "SQ-L-2-3"}]},
-        }
-        self.post_webhook(sale_payload)
+        call_command("mark_seats_sold", self.show.sku, "L-2-3")
 
-        refund_payload = {
-            "topic": "order.update",
-            "data": {
-                "id": "order-4",
-                "fulfillmentStatus": "FULFILLED",
-                "paymentState": "REFUNDED",
-                "grandTotal": {"currency": "USD", "value": 50.0},
-                "refundedTotal": {"currency": "USD", "value": 50.0},
-                "lineItems": [{"id": "li-4", "sku": "SQ-L-2-3"}],
-            },
-        }
-        self.post_webhook(refund_payload)
+        sync_inventory([{"sku": "SQ-L-2-3", "quantity": 1, "isUnlimited": False}])
 
         res = self.client.get(self.seats_url)
         self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
 
-    def test_webhook_partial_refund_does_not_void_seat_sale(self):
-        # A partial refund (e.g. a post-purchase goodwill discount) must
-        # not release a seat that's still legitimately sold, even though
-        # Squarespace flips paymentState to REFUNDED for any refund amount.
+    def test_inventory_sync_leaves_out_of_stock_seat_sold(self):
         SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
-        sale_payload = {
-            "topic": "order.create",
-            "data": {"id": "order-5", "lineItems": [{"id": "li-5", "sku": "SQ-L-2-3"}]},
-        }
-        self.post_webhook(sale_payload)
+        call_command("mark_seats_sold", self.show.sku, "L-2-3")
 
-        refund_payload = {
-            "topic": "order.update",
-            "data": {
-                "id": "order-5",
-                "fulfillmentStatus": "FULFILLED",
-                "paymentState": "REFUNDED",
-                "grandTotal": {"currency": "USD", "value": 50.0},
-                "refundedTotal": {"currency": "USD", "value": 10.0},
-                "lineItems": [{"id": "li-5", "sku": "SQ-L-2-3"}],
-            },
-        }
-        self.post_webhook(refund_payload)
+        sync_inventory([{"sku": "SQ-L-2-3", "quantity": 0, "isUnlimited": False}])
+
+        res = self.client.get(self.seats_url)
+        self.assertEqual(res.json(), {"soldSeats": ["L-2-3"], "heldSeats": []})
+
+    def test_inventory_sync_releases_only_the_restocked_seat_in_multi_seat_order(self):
+        # A refund of one seat within a multi-seat order can't be localized
+        # from Squarespace's order payload, since it has no per-line-item
+        # refund breakdown — this is exactly the case inventory polling
+        # (rather than order-field inspection) is meant to handle.
+        SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
+        SeatSkuMap.objects.create(show=self.show, seat_code="L-2-4", squarespace_sku="SQ-L-2-4")
+        call_command("mark_seats_sold", self.show.sku, "L-2-3", "L-2-4")
+
+        sync_inventory(
+            [
+                {"sku": "SQ-L-2-3", "quantity": 1, "isUnlimited": False},
+                {"sku": "SQ-L-2-4", "quantity": 0, "isUnlimited": False},
+            ]
+        )
+
+        res = self.client.get(self.seats_url)
+        self.assertEqual(res.json(), {"soldSeats": ["L-2-4"], "heldSeats": []})
+
+    def test_inventory_sync_ignores_unlimited_and_unknown_skus(self):
+        SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
+        call_command("mark_seats_sold", self.show.sku, "L-2-3")
+
+        sync_inventory(
+            [
+                {"sku": "SQ-L-2-3", "quantity": 1, "isUnlimited": True},
+                {"sku": "SQ-UNKNOWN", "quantity": 5, "isUnlimited": False},
+            ]
+        )
 
         res = self.client.get(self.seats_url)
         self.assertEqual(res.json(), {"soldSeats": ["L-2-3"], "heldSeats": []})
