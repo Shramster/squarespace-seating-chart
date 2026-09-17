@@ -109,7 +109,7 @@ class TicketingTests(TestCase):
         res = self.client.get(self.seats_url)
         self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
 
-    def test_webhook_refund_without_cancellation_voids_seat_sale(self):
+    def test_webhook_full_refund_without_cancellation_voids_seat_sale(self):
         SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
         sale_payload = {
             "topic": "order.create",
@@ -123,6 +123,8 @@ class TicketingTests(TestCase):
                 "id": "order-4",
                 "fulfillmentStatus": "FULFILLED",
                 "paymentState": "REFUNDED",
+                "grandTotal": {"currency": "USD", "value": 50.0},
+                "refundedTotal": {"currency": "USD", "value": 50.0},
                 "lineItems": [{"id": "li-4", "sku": "SQ-L-2-3"}],
             },
         }
@@ -131,7 +133,10 @@ class TicketingTests(TestCase):
         res = self.client.get(self.seats_url)
         self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
 
-    def test_webhook_nonzero_refunded_total_voids_seat_sale(self):
+    def test_webhook_partial_refund_does_not_void_seat_sale(self):
+        # A partial refund (e.g. a post-purchase goodwill discount) must
+        # not release a seat that's still legitimately sold, even though
+        # Squarespace flips paymentState to REFUNDED for any refund amount.
         SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
         sale_payload = {
             "topic": "order.create",
@@ -144,15 +149,16 @@ class TicketingTests(TestCase):
             "data": {
                 "id": "order-5",
                 "fulfillmentStatus": "FULFILLED",
-                "paymentState": "PARTIALLY_PAID",
-                "refundedTotal": {"currency": "USD", "value": 25.0},
+                "paymentState": "REFUNDED",
+                "grandTotal": {"currency": "USD", "value": 50.0},
+                "refundedTotal": {"currency": "USD", "value": 10.0},
                 "lineItems": [{"id": "li-5", "sku": "SQ-L-2-3"}],
             },
         }
         self.post_webhook(refund_payload)
 
         res = self.client.get(self.seats_url)
-        self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
+        self.assertEqual(res.json(), {"soldSeats": ["L-2-3"], "heldSeats": []})
 
     def test_mark_seats_sold_command_bypasses_squarespace(self):
         call_command("mark_seats_sold", self.show.sku, "L-2-3", "L-2-4")
