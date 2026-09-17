@@ -109,6 +109,51 @@ class TicketingTests(TestCase):
         res = self.client.get(self.seats_url)
         self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
 
+    def test_webhook_refund_without_cancellation_voids_seat_sale(self):
+        SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
+        sale_payload = {
+            "topic": "order.create",
+            "data": {"id": "order-4", "lineItems": [{"id": "li-4", "sku": "SQ-L-2-3"}]},
+        }
+        self.post_webhook(sale_payload)
+
+        refund_payload = {
+            "topic": "order.update",
+            "data": {
+                "id": "order-4",
+                "fulfillmentStatus": "FULFILLED",
+                "paymentState": "REFUNDED",
+                "lineItems": [{"id": "li-4", "sku": "SQ-L-2-3"}],
+            },
+        }
+        self.post_webhook(refund_payload)
+
+        res = self.client.get(self.seats_url)
+        self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
+
+    def test_webhook_nonzero_refunded_total_voids_seat_sale(self):
+        SeatSkuMap.objects.create(show=self.show, seat_code="L-2-3", squarespace_sku="SQ-L-2-3")
+        sale_payload = {
+            "topic": "order.create",
+            "data": {"id": "order-5", "lineItems": [{"id": "li-5", "sku": "SQ-L-2-3"}]},
+        }
+        self.post_webhook(sale_payload)
+
+        refund_payload = {
+            "topic": "order.update",
+            "data": {
+                "id": "order-5",
+                "fulfillmentStatus": "FULFILLED",
+                "paymentState": "PARTIALLY_PAID",
+                "refundedTotal": {"currency": "USD", "value": 25.0},
+                "lineItems": [{"id": "li-5", "sku": "SQ-L-2-3"}],
+            },
+        }
+        self.post_webhook(refund_payload)
+
+        res = self.client.get(self.seats_url)
+        self.assertEqual(res.json(), {"soldSeats": [], "heldSeats": []})
+
     def test_mark_seats_sold_command_bypasses_squarespace(self):
         call_command("mark_seats_sold", self.show.sku, "L-2-3", "L-2-4")
 

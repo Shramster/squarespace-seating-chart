@@ -10,14 +10,24 @@ logger = logging.getLogger("ticketing")
 def sync_order(order):
     """Upserts/voids SeatSale rows for one Squarespace order. Shared by the
     order webhook view and the Orders-API poller — same order shape either
-    way: `{id, fulfillmentStatus, lineItems: [{id, sku}]}`.
+    way: `{id, fulfillmentStatus, paymentState, refundedTotal, lineItems:
+    [{id, sku}]}`.
     """
     order_id = order.get("id") or order.get("orderId")
     if not order_id:
         logger.warning("Order payload missing id: %s", order)
         return
 
-    is_cancellation = order.get("fulfillmentStatus") == "CANCELED"
+    # Cancellation and refund are independent on a Squarespace order: a
+    # refund does not necessarily flip fulfillmentStatus to CANCELED, so
+    # both signals must be checked to release a seat.
+    payment_state = order.get("paymentState")
+    refunded_total = (order.get("refundedTotal") or {}).get("value") or 0
+    is_voided = (
+        order.get("fulfillmentStatus") == "CANCELED"
+        or payment_state in ("REFUNDED", "REFUND_PENDING")
+        or float(refunded_total) > 0
+    )
 
     for line_item in order.get("lineItems", []):
         line_item_id = line_item.get("id") or line_item.get("lineItemId")
@@ -30,7 +40,7 @@ def sync_order(order):
             logger.warning("No SeatSkuMap entry for SKU %s (order %s)", sku, order_id)
             continue
 
-        if is_cancellation:
+        if is_voided:
             SeatSale.objects.filter(
                 squarespace_order_id=order_id,
                 squarespace_line_item_id=line_item_id,
