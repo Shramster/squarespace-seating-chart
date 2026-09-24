@@ -68,7 +68,10 @@ export function buildRow(show, seat, price) {
     '', // Sale Price
     'No',
     1,
-    show.label,
+    // Preview shows get a second, shared category so a single Squarespace
+    // discount code scoped to "Preview Shows" covers all four preview
+    // performances at once (see SHOW_DATES in src/config.js).
+    show.preview ? `${show.label}, Preview Shows` : show.label,
     'Convention',
     '', // Weight (physical-shipping only, not applicable to SERVICE)
     '', // Length
@@ -80,7 +83,10 @@ export function buildRow(show, seat, price) {
     // backend/ticketing_dev/settings.py), copied verbatim from
     // public/ticket_product_image.jpg by Vite's build (not bundled
     // through the JS-asset pipeline, which would collide with other
-    // bundled assets — see vite.config.js's assetFileNames).
+    // bundled assets — see vite.config.js's assetFileNames). Tried
+    // pointing this at Squarespace's own CDN URL for the same image to
+    // speed up bulk import, but that broke image loading on import — back
+    // to this URL; upload products individually instead.
     `${CONFIG.apiBase}/static/ticket_product_image.jpg`
   ]
     .map(csvField)

@@ -131,10 +131,15 @@ export function formatShowLabel(show) {
 // Full run announced 2026-09-12; approved and gone live 2026-09-12 — all
 // 13 dates below are active/buyer-facing.
 const SHOW_DATES = [
-  { sku: 'OCT03', date: '2026-10-03T15:00:00' },
-  { sku: 'OCT04', date: '2026-10-04T15:00:00' },
-  { sku: 'OCT09', date: '2026-10-09T20:00:00' },
-  { sku: 'OCT10', date: '2026-10-10T15:00:00' },
+  // preview: true adds a shared "Preview Shows" Squarespace category
+  // (see buildRow() in backend/test_data/csv_common.mjs) alongside each
+  // show's own per-day category, so a single Squarespace discount code
+  // scoped to that category covers all four preview performances at
+  // once instead of needing to be attached to ~400 individual products.
+  { sku: 'OCT03', date: '2026-10-03T15:00:00', preview: true },
+  { sku: 'OCT04', date: '2026-10-04T15:00:00', preview: true },
+  { sku: 'OCT09', date: '2026-10-09T20:00:00', preview: true },
+  { sku: 'OCT10', date: '2026-10-10T15:00:00', preview: true },
   { sku: 'OCT16', date: '2026-10-16T20:00:00' },
   { sku: 'OCT17', date: '2026-10-17T15:00:00' },
   { sku: 'OCT18', date: '2026-10-18T15:00:00' },
