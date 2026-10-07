@@ -5,7 +5,7 @@ from .models import SeatSale, SeatSkuMap, Show
 
 @admin.register(Show)
 class ShowAdmin(admin.ModelAdmin):
-    list_display = ("sku", "label", "is_active", "created_at")
+    list_display = ("sku", "label", "is_active", "starts_at", "created_at")
 
 
 @admin.register(SeatSkuMap)

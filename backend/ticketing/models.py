@@ -1,11 +1,28 @@
+from datetime import timedelta
+
 from django.db import models
+from django.utils import timezone
+
+SALES_CLOSE_AFTER_START = timedelta(hours=3)
 
 
 class Show(models.Model):
     sku = models.CharField(max_length=64, unique=True)
     label = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
+    starts_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def sales_close_at(self):
+        return self.starts_at + SALES_CLOSE_AFTER_START if self.starts_at else None
+
+    @property
+    def is_sellable(self):
+        if not self.is_active:
+            return False
+        close = self.sales_close_at
+        return close is None or timezone.now() < close
 
     def __str__(self):
         return f"{self.sku} ({self.label})"

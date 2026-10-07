@@ -216,6 +216,53 @@ class TicketingTests(TestCase):
         self.assertFalse(SeatHold.objects.filter(seat_code="L-2-3").exists())
 
 
+@override_settings(SQUARESPACE_WEBHOOK_SECRET=TEST_SECRET_HEX)
+class SalesCutoffTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        now = timezone.now()
+        self.open_show = Show.objects.create(sku="OPEN1", label="Open", starts_at=now - timedelta(hours=2))
+        self.closed_show = Show.objects.create(sku="CLOSED1", label="Closed", starts_at=now - timedelta(hours=3))
+        SeatSkuMap.objects.create(show=self.closed_show, seat_code="A-1", squarespace_sku="SQ-A-1")
+
+    def post_webhook(self, payload):
+        body = json.dumps(payload).encode()
+        return self.client.post(
+            "/api/webhooks/squarespace/orders/",
+            data=body,
+            content_type="application/json",
+            HTTP_SQUARESPACE_SIGNATURE=sign(body),
+        )
+
+    def test_open_show_serves_seats_and_holds(self):
+        self.assertEqual(self.client.get("/api/shows/OPEN1/seats/").status_code, 200)
+        res = self.client.post("/api/shows/OPEN1/seats/B-2/hold/")
+        self.assertEqual(res.status_code, 201)
+
+    def test_closed_show_seats_and_holds_return_410(self):
+        self.assertEqual(self.client.get("/api/shows/CLOSED1/seats/").status_code, 410)
+        self.assertEqual(self.client.post("/api/shows/CLOSED1/seats/A-1/hold/").status_code, 410)
+        self.assertFalse(SeatHold.objects.filter(show=self.closed_show).exists())
+
+    def test_show_list_excludes_closed_shows(self):
+        res = self.client.get("/api/shows/")
+        self.assertEqual(res.json(), [{"sku": "OPEN1"}])
+
+    def test_show_without_start_time_stays_sellable(self):
+        Show.objects.create(sku="NOTIME", label="No time")
+        self.assertEqual(self.client.get("/api/shows/NOTIME/seats/").status_code, 200)
+
+    def test_order_sync_still_records_sale_after_cutoff(self):
+        payload = {
+            "topic": "order.create",
+            "data": {"id": "order-late", "lineItems": [{"id": "li-late", "sku": "SQ-A-1"}]},
+        }
+        self.assertEqual(self.post_webhook(payload).status_code, 200)
+        self.assertTrue(
+            SeatSale.objects.filter(show=self.closed_show, seat_code="A-1", voided_at__isnull=True).exists()
+        )
+
+
 class ImportSquarespaceCsvTests(TestCase):
     def test_import_creates_shows_and_seat_sku_map(self):
         csv_body = (

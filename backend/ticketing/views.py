@@ -19,6 +19,21 @@ logger = logging.getLogger("ticketing")
 HOLD_TTL = timedelta(minutes=10)
 
 
+def get_sellable_show(sku):
+    show = get_object_or_404(Show, sku=sku)
+    return show if show.is_sellable else None
+
+
+class ShowListView(APIView):
+    """Public list of shows still open for sale, so the embed can hide the rest."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        shows = [{"sku": show.sku} for show in Show.objects.filter(is_active=True) if show.is_sellable]
+        return Response(shows)
+
+
 class SeatStatusView(APIView):
     """Public read endpoint the seat-chart embed polls. No auth — anyone can
     see which seats are sold, same as the physical box office."""
@@ -26,7 +41,9 @@ class SeatStatusView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, sku):
-        show = get_object_or_404(Show, sku=sku)
+        show = get_sellable_show(sku)
+        if show is None:
+            return Response({"detail": "Sales closed."}, status=status.HTTP_410_GONE)
         sold_seats = list(
             SeatSale.objects.filter(show=show, voided_at__isnull=True).values_list(
                 "seat_code", flat=True
@@ -51,7 +68,9 @@ class SeatHoldView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, sku, code):
-        show = get_object_or_404(Show, sku=sku)
+        show = get_sellable_show(sku)
+        if show is None:
+            return Response({"detail": "Sales closed."}, status=status.HTTP_410_GONE)
         now = timezone.now()
 
         with transaction.atomic():
