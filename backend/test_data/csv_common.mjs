@@ -68,10 +68,11 @@ export function buildRow(show, seat, price) {
     '', // Sale Price
     'No',
     1,
-    // Preview shows get a second, shared category so a single Squarespace
-    // discount code scoped to "Preview Shows" covers all four preview
-    // performances at once (see SHOW_DATES in src/config.js).
-    show.preview ? `${show.label}, Preview Shows` : show.label,
+    // Categories are matched by URL slug, not display name. Only the
+    // preview shows get one (shared, so a single Squarespace discount code
+    // scoped to it covers all four preview performances); no per-date
+    // categories are used on the site.
+    show.preview ? '/preview-shows' : '',
     'Convention',
     '', // Weight (physical-shipping only, not applicable to SERVICE)
     '', // Length

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CONFIG, SEAT_INDEX, seatBuyLink } from './config.js'
 import { useSeatStatus } from './hooks/useSeatStatus.js'
+import { useOpenShows } from './hooks/useOpenShows.js'
 import DayTabs from './components/DayTabs.jsx'
 import VenueMap from './components/VenueMap.jsx'
 import Legend from './components/Legend.jsx'
@@ -15,6 +16,8 @@ export default function App() {
       CONFIG.shows[0]
     )
   })
+  const openSkus = useOpenShows(CONFIG.apiBase)
+  const visibleShows = openSkus ? CONFIG.shows.filter((s) => openSkus.has(s.sku)) : CONFIG.shows
   const [selected, setSelected] = useState(null)
   const [holdState, setHoldState] = useState('idle') // 'idle' | 'holding' | 'held' | 'error'
   const [holdError, setHoldError] = useState(null)
@@ -25,6 +28,14 @@ export default function App() {
   const [localHolds, setLocalHolds] = useState([])
   const { soldSeats, heldSeats: polledHeldSeats, status } = useSeatStatus(CONFIG.apiBase, activeShow.sku)
   const heldSeats = [...new Set([...polledHeldSeats, ...localHolds])]
+
+  // Once the open-show list arrives, move off a date that has closed (e.g.
+  // an old ?show= link) onto the first date still on sale.
+  useEffect(() => {
+    if (openSkus && !openSkus.has(activeShow.sku) && visibleShows.length) {
+      applyShow(visibleShows[0])
+    }
+  }, [openSkus, activeShow.sku])
 
   // A fresh seat/show pick always starts from a clean hold state.
   useEffect(() => {
@@ -98,7 +109,11 @@ export default function App() {
         <h3 className="sc-title">Choose Your Seat</h3>
       </div>
 
-      <DayTabs shows={CONFIG.shows} activeSku={activeShow.sku} onSelect={handleSelectShow} />
+      {openSkus && visibleShows.length === 0 ? (
+        <p className="sc-status-note">Ticket sales are closed for all performances.</p>
+      ) : (
+        <DayTabs shows={visibleShows} activeSku={activeShow.sku} onSelect={handleSelectShow} />
+      )}
 
       {status === 'loading' && <p className="sc-status-note">Loading seat availability…</p>}
       {status === 'error' && (
